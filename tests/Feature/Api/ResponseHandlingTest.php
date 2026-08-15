@@ -69,7 +69,7 @@ test('an unpaginated collection returns an array in data', function () {
         ->assertJsonPath('success', true)
         ->assertJsonCount(2, 'data')
         ->assertJsonPath('data.1.id', 'sport_cricket')
-        ->assertJsonPath('meta', []);
+        ->assertJsonPath('meta.request_id', fn (string $requestId): bool => preg_match('/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/', $requestId) === 1);
 });
 
 test('created responses include the supplied location', function () {
