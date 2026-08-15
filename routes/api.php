@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use App\Http\Controllers\Api\V1\Auth\VerifyOtpController;
 use Illuminate\Support\Facades\Route;
@@ -14,4 +15,5 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
 
     Route::post('auth/otp-requests', RequestOtpController::class)->name('auth.otp_requests.store');
     Route::post('auth/otp-verifications', VerifyOtpController::class)->name('auth.otp_verifications.store');
+    Route::delete('auth/session', LogoutController::class)->middleware('auth:sanctum')->name('auth.session.destroy');
 });
