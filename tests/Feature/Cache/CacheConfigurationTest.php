@@ -7,6 +7,7 @@ test('the Redis cache store separates application data and lock connections', fu
     expect(config('database.redis.cache_locks.database'))->toBe('2');
     expect(config('cache.stores.rate_limiter.connection'))->toBe('rate_limiter');
     expect(config('database.redis.rate_limiter.database'))->toBe('3');
+    expect(config('cache.stores.scheduler.connection'))->toBe('cache_locks');
     expect(config('cache.serializable_classes'))->toBeFalse();
 });
 
