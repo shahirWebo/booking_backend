@@ -17,6 +17,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Rate Limiter Store
+    |--------------------------------------------------------------------------
+    |
+    | Rate-limit counters are security controls, not application-cache data.
+    | Keep them in a non-evictable store outside the regular cache pool.
+    |
+    */
+
+    'limiter' => env(
+        'RATE_LIMITER_STORE',
+        env('APP_ENV') === 'testing' ? 'array' : 'rate_limiter',
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |
@@ -80,6 +95,11 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'cache_locks'),
+        ],
+
+        'rate_limiter' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_RATE_LIMITER_CONNECTION', 'rate_limiter'),
         ],
 
         'dynamodb' => [

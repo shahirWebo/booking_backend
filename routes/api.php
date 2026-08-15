@@ -7,6 +7,6 @@ use Illuminate\Support\Facades\Route;
  * Add compatible endpoints to the current version group; preserve older groups
  * when a future breaking API version is introduced.
  */
-Route::prefix('v1')->as('api.v1.')->group(function (): void {
+Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (): void {
     Route::get('/', fn () => response()->noContent())->name('index');
 });
