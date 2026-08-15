@@ -37,12 +37,30 @@ test('users table supports mobile-only identities', function () {
         'mobile_number' => '+919876543211',
     ]);
 
-    expect(DB::table('users')->where('id', $userId)->first())
-        ->mobile_number->toBe('+919876543211')
-        ->status->toBe('active')
-        ->name->toBeNull()
-        ->email->toBeNull()
-        ->password->toBeNull();
+    $user = DB::table('users')->where('id', $userId);
+
+    expect($user->value('mobile_number'))->toBe('+919876543211')
+        ->and($user->value('status'))->toBe('active')
+        ->and($user->value('name'))->toBeNull()
+        ->and($user->value('email'))->toBeNull()
+        ->and($user->value('password'))->toBeNull();
+});
+
+test('users table enforces one account per normalized mobile number', function () {
+    User::factory()->create([
+        'mobile_number' => '+919876543212',
+    ]);
+
+    expect(fn () => User::factory()->create([
+        'mobile_number' => '+919876543212',
+    ]))->toThrow(QueryException::class);
+});
+
+test('users table permits multiple identities without a mobile number', function () {
+    User::factory()->create(['mobile_number' => null]);
+    User::factory()->create(['mobile_number' => null]);
+
+    expect(DB::table('users')->whereNull('mobile_number')->count())->toBe(2);
 });
 
 test('users table rejects unsupported account statuses', function () {
