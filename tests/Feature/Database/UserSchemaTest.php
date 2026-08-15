@@ -1,0 +1,55 @@
+<?php
+
+use App\Domain\Users\Enums\UserStatus;
+use App\Models\User;
+use Illuminate\Database\QueryException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+uses(RefreshDatabase::class);
+
+test('users table stores platform identity and account status fields', function () {
+    expect(Schema::hasColumns('users', [
+        'id',
+        'name',
+        'mobile_number',
+        'email',
+        'email_verified_at',
+        'password',
+        'status',
+        'remember_token',
+        'created_at',
+        'updated_at',
+    ]))->toBeTrue();
+
+    $user = User::factory()->create([
+        'mobile_number' => '+919876543210',
+    ]);
+
+    expect($user->status)->toBe(UserStatus::Active)
+        ->and($user->mobile_number)->toBe('+919876543210')
+        ->and(DB::table('users')->where('id', $user->id)->value('status'))->toBe('active');
+});
+
+test('users table supports mobile-only identities', function () {
+    $userId = DB::table('users')->insertGetId([
+        'mobile_number' => '+919876543211',
+    ]);
+
+    expect(DB::table('users')->where('id', $userId)->first())
+        ->mobile_number->toBe('+919876543211')
+        ->status->toBe('active')
+        ->name->toBeNull()
+        ->email->toBeNull()
+        ->password->toBeNull();
+});
+
+test('users table rejects unsupported account statuses', function () {
+    expect(fn () => DB::table('users')->insert([
+        'name' => 'Invalid Status User',
+        'email' => 'invalid-status@example.test',
+        'password' => 'not-a-real-password-hash',
+        'status' => 'unknown',
+    ]))->toThrow(QueryException::class);
+});
