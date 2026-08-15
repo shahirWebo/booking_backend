@@ -21,7 +21,7 @@ final class UserResource extends ApiResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'mobileNumber' => $this->mobile_number,
+            'mobile_number' => $this->mobile_number,
             'email' => $this->email,
             'status' => $this->status->value,
         ];

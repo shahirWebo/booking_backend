@@ -3,6 +3,7 @@
 use App\Domain\Auth\Enums\OtpRequestPurpose;
 use App\Domain\Auth\Enums\OtpRequestStatus;
 use App\Domain\Auth\Services\OtpChallengeIssuer;
+use App\Domain\Users\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -42,6 +43,29 @@ test('an OTP verification does not disclose invalid or exhausted challenge state
     expect(User::query()->count())->toBe(0)
         ->and(PersonalAccessToken::query()->count())->toBe(0);
 });
+
+test('blocked and suspended users cannot establish a bearer-token session', function (UserStatus $status, string $code) {
+    $mobileNumber = '+919876543210';
+    User::factory()->create([
+        'mobile_number' => $mobileNumber,
+        'status' => $status,
+    ]);
+    $issued = app(OtpChallengeIssuer::class)->issue($mobileNumber, OtpRequestPurpose::Authentication);
+
+    $this->postJson(route('api.v1.auth.otp_verifications.store'), [
+        'otp_request_id' => $issued['challenge']->id,
+        'code' => $issued['code'],
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('code', $code);
+
+    expect(PersonalAccessToken::query()->count())->toBe(0)
+        ->and($issued['challenge']->fresh()->status)->toBe(OtpRequestStatus::PendingDelivery);
+})->with([
+    'blocked user' => [UserStatus::Blocked, 'USER_BLOCKED'],
+    'suspended user' => [UserStatus::Suspended, 'USER_SUSPENDED'],
+]);
 
 test('the OTP verification endpoint validates its opaque request ID and six digit code', function () {
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [

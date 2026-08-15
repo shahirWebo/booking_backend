@@ -2,6 +2,8 @@
 
 namespace App\Domain\Auth\Services;
 
+use App\Domain\Auth\Exceptions\AccountAccessRestrictedException;
+use App\Domain\Users\Enums\UserStatus;
 use App\Models\OtpRequest;
 use App\Models\User;
 use Laravel\Sanctum\NewAccessToken;
@@ -23,6 +25,11 @@ final class OtpAuthenticationService
             $user = User::query()->firstOrCreate([
                 'mobile_number' => $challenge->mobile_number_ciphertext,
             ]);
+            $user->refresh();
+
+            if ($user->status !== UserStatus::Active) {
+                throw new AccountAccessRestrictedException($user->status);
+            }
 
             $result = [
                 'user' => $user,
