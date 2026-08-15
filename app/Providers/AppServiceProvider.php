@@ -6,6 +6,7 @@ use App\Support\EnvironmentConfiguration;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Queue\Job;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobFailed;
@@ -36,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureTrustedProxies();
         $this->configureRateLimiting();
         $this->configureQueue();
     }
@@ -106,6 +108,14 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute((int) config('rate_limiting.api.per_minute'))
                 ->by($this->apiRateLimitKey($request));
         });
+    }
+
+    /**
+     * Limit forwarding-header trust to the explicit trusted-proxy policy.
+     */
+    protected function configureTrustedProxies(): void
+    {
+        TrustProxies::withHeaders((int) config('trustedproxy.headers'));
     }
 
     /**
