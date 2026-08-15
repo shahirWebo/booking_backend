@@ -10,7 +10,10 @@ use Laravel\Sanctum\NewAccessToken;
 
 final class OtpAuthenticationService
 {
-    public function __construct(private readonly OtpChallengeVerifier $challengeVerifier) {}
+    public function __construct(
+        private readonly OtpChallengeVerifier $challengeVerifier,
+        private readonly AuthenticationAuditLogger $auditLogger,
+    ) {}
 
     /**
      * Verify an authentication challenge and atomically establish an API credential.
@@ -21,13 +24,15 @@ final class OtpAuthenticationService
     {
         $result = null;
 
-        $this->challengeVerifier->verify($challengeId, $code, function (OtpRequest $challenge) use (&$result): void {
+        $challenge = $this->challengeVerifier->verify($challengeId, $code, function (OtpRequest $challenge) use (&$result): void {
             $user = User::query()->firstOrCreate([
                 'mobile_number' => $challenge->mobile_number_ciphertext,
             ]);
             $user->refresh();
 
             if ($user->status !== UserStatus::Active) {
+                $this->auditLogger->authenticationRestricted($challenge, $user);
+
                 throw new AccountAccessRestrictedException($user->status);
             }
 
@@ -40,6 +45,8 @@ final class OtpAuthenticationService
         if (! is_array($result)) {
             throw new \LogicException('A verified OTP challenge must establish authentication.');
         }
+
+        $this->auditLogger->authenticationSucceeded($challenge, $result['user']);
 
         return $result;
     }
