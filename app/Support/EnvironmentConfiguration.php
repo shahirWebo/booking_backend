@@ -15,4 +15,12 @@ final class EnvironmentConfiguration
             throw new LogicException("APP_DEBUG must be false in the {$environment} environment.");
         }
     }
+
+    public static function assertOtpHashPepper(string $environment, mixed $pepper): void
+    {
+        if (in_array($environment, ['staging', 'production'], true)
+            && (! is_string($pepper) || $pepper === '')) {
+            throw new LogicException("OTP_HASH_PEPPER must be configured in the {$environment} environment.");
+        }
+    }
 }

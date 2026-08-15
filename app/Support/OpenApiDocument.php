@@ -36,8 +36,17 @@ final class OpenApiDocument
                         'tags' => ['Authentication'],
                         'operationId' => 'requestOtp',
                         'summary' => 'Request an SMS OTP authentication challenge.',
-                        'description' => 'The public endpoint is registered but currently fails closed until its validation, issuance, anti-abuse, and provider-delivery controls are implemented.',
+                        'description' => 'The endpoint accepts and normalizes supported mobile numbers, then currently fails closed until challenge issuance, anti-abuse, and provider-delivery controls are implemented.',
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/OtpRequestInput'],
+                                ],
+                            ],
+                        ],
                         'responses' => [
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
                             '503' => ['$ref' => '#/components/responses/ServiceUnavailableError'],
                         ],
                     ],
@@ -100,6 +109,26 @@ final class OpenApiDocument
                     ],
                 ],
                 'responses' => [
+                    'ValidationError' => [
+                        'description' => 'The request contains invalid fields.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/ValidationErrorResponse'],
+                                'example' => [
+                                    'success' => false,
+                                    'code' => 'VALIDATION_ERROR',
+                                    'message' => 'The request contains invalid fields.',
+                                    'errors' => [
+                                        'mobile' => ['Enter a valid mobile number.'],
+                                    ],
+                                    'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+                                ],
+                            ],
+                        ],
+                    ],
                     'ServiceUnavailableError' => [
                         'description' => 'A required service is temporarily unavailable.',
                         'headers' => [
@@ -165,6 +194,26 @@ final class OpenApiDocument
                                 ],
                             ],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'ValidationErrorResponse' => [
+                        'allOf' => [
+                            ['$ref' => '#/components/schemas/ErrorResponse'],
+                            [
+                                'type' => 'object',
+                                'required' => ['errors'],
+                            ],
+                        ],
+                    ],
+                    'OtpRequestInput' => [
+                        'type' => 'object',
+                        'required' => ['mobile'],
+                        'properties' => [
+                            'mobile' => [
+                                'type' => 'string',
+                                'maxLength' => 64,
+                                'description' => 'A supported mobile number. The server normalizes accepted input to E.164 and never returns it.',
+                            ],
                         ],
                     ],
                     'HealthStatus' => [

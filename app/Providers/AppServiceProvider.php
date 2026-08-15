@@ -51,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
             app()->environment(),
             (bool) config('app.debug'),
         );
+        EnvironmentConfiguration::assertOtpHashPepper(
+            app()->environment(),
+            config('otp.hash_pepper'),
+        );
 
         Date::use(CarbonImmutable::class);
 

@@ -24,6 +24,7 @@
         <env name="APP_URL" value="http://localhost"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="OTP_HASH_PEPPER" value="testing-otp-hash-pepper-not-for-deployment"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_PREFIX" value="turf_booking:testing:cache:"/>
         <env name="CORS_ALLOWED_ORIGINS" value="http://spa.test,http://other.test"/>
