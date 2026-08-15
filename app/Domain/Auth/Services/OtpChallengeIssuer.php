@@ -16,6 +16,7 @@ final class OtpChallengeIssuer
         private readonly OtpCodeGenerator $codeGenerator,
         private readonly OtpCodeHasher $codeHasher,
         private readonly OtpPrivacyKeyDeriver $keyDeriver,
+        private readonly AuthenticationAuditLogger $auditLogger,
     ) {}
 
     /**
@@ -25,7 +26,7 @@ final class OtpChallengeIssuer
      */
     public function issue(string $mobileNumber, OtpRequestPurpose $purpose): array
     {
-        return DB::transaction(function () use ($mobileNumber, $purpose): array {
+        $issued = DB::transaction(function () use ($mobileNumber, $purpose): array {
             $now = CarbonImmutable::now('UTC');
             $lookup = $this->keyDeriver->mobileLookup($mobileNumber, $purpose->value);
             $activeStatuses = [
@@ -81,6 +82,7 @@ final class OtpChallengeIssuer
                 'status' => OtpRequestStatus::PendingDelivery,
                 'failed_verification_attempts' => 0,
                 'delivery_effect_key' => hash('sha256', 'otp_delivery:'.Str::ulid()),
+                'audit_correlation_id' => (string) Str::ulid(),
                 'issued_at' => $now,
                 'expires_at' => $now->addSeconds(config('otp.code_lifetime_seconds')),
                 'resend_available_at' => $now->addSeconds(config('otp.resend_cooldown_seconds')),
@@ -92,5 +94,9 @@ final class OtpChallengeIssuer
 
             return ['challenge' => $challenge, 'code' => $code];
         });
+
+        $this->auditLogger->challengeIssued($issued['challenge']);
+
+        return $issued;
     }
 }
