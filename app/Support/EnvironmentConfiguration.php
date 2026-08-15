@@ -31,4 +31,15 @@ final class EnvironmentConfiguration
             throw new LogicException("OTP_LOOKUP_HMAC_KEY must be configured in the {$environment} environment.");
         }
     }
+
+    public static function assertOtpDeliveryProvider(string $environment, mixed $provider): void
+    {
+        if (! is_string($provider) || $provider !== 'fake') {
+            throw new LogicException('OTP_DELIVERY_PROVIDER must be set to a supported provider.');
+        }
+
+        if (! in_array($environment, ['local', 'testing'], true)) {
+            throw new LogicException("OTP_DELIVERY_PROVIDER=fake is not permitted in the {$environment} environment.");
+        }
+    }
 }

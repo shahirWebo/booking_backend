@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Auth\Contracts\OtpDeliveryProvider;
+use App\Domain\Auth\Providers\FakeOtpDeliveryProvider;
 use App\Support\EnvironmentConfiguration;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -28,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(OtpDeliveryProvider::class, FakeOtpDeliveryProvider::class);
     }
 
     /**
@@ -58,6 +60,10 @@ class AppServiceProvider extends ServiceProvider
         EnvironmentConfiguration::assertOtpLookupHmacKey(
             app()->environment(),
             config('otp.lookup_hmac_key'),
+        );
+        EnvironmentConfiguration::assertOtpDeliveryProvider(
+            app()->environment(),
+            config('otp.delivery_provider'),
         );
 
         Date::use(CarbonImmutable::class);

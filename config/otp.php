@@ -14,6 +14,11 @@ return [
     // Independent HMAC key for private mobile/risk limiter lookup keys.
     'lookup_hmac_key' => env('OTP_LOOKUP_HMAC_KEY'),
 
+    // A deterministic adapter is permitted only for local and isolated tests.
+    'delivery_provider' => env('OTP_DELIVERY_PROVIDER', 'fake'),
+
+    'fake_delivery_outcome' => env('OTP_FAKE_DELIVERY_OUTCOME', 'accepted'),
+
     'code_lifetime_seconds' => (int) env('OTP_CODE_LIFETIME_SECONDS', 300),
     'resend_cooldown_seconds' => (int) env('OTP_RESEND_COOLDOWN_SECONDS', 60),
     'max_verification_attempts' => (int) env('OTP_MAX_VERIFICATION_ATTEMPTS', 5),
