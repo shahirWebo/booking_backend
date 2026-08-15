@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -9,4 +10,6 @@ use Illuminate\Support\Facades\Route;
  */
 Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (): void {
     Route::get('/', fn () => response()->noContent())->name('index');
+
+    Route::post('auth/otp-requests', RequestOtpController::class)->name('auth.otp_requests.store');
 });

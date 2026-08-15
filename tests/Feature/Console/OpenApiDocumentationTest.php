@@ -12,6 +12,8 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
     $document = OpenApiDocument::toArray();
 
     expect($document['openapi'])->toBe('3.1.1')
+        ->and($document['paths']['/api/v1/auth/otp-requests']['post']['operationId'])->toBe('requestOtp')
+        ->and($document['paths']['/api/v1/auth/otp-requests']['post']['responses'])->toHaveKey('503')
         ->and($document['paths']['/api/v1']['get']['operationId'])->toBe('getApiV1Root')
         ->and($document['paths']['/api/v1']['get']['responses'])->toHaveKeys(['204', '429'])
         ->and($document['paths']['/health']['get']['operationId'])->toBe('getHealth')
@@ -20,5 +22,6 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
             'ResponseMeta',
             'ErrorResponse',
             'HealthStatus',
-        ]);
+        ])
+        ->and($document['components']['responses'])->toHaveKey('ServiceUnavailableError');
 });
