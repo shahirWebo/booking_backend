@@ -41,7 +41,16 @@ return [
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
-            'after_commit' => false,
+            'after_commit' => (bool) env('DB_QUEUE_AFTER_COMMIT', true),
+        ],
+
+        'database_long' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => env('DB_QUEUE_LONG', 'media'),
+            'retry_after' => (int) env('DB_QUEUE_LONG_RETRY_AFTER', 300),
+            'after_commit' => (bool) env('DB_QUEUE_AFTER_COMMIT', true),
         ],
 
         'beanstalkd' => [
