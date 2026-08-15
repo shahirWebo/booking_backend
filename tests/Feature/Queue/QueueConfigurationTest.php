@@ -19,7 +19,7 @@ test('database queue connections use durable after-commit settings', function ()
     expect(config('queue.connections.database.retry_after'))->toBe(90);
     expect(config('queue.connections.database_long.after_commit'))->toBeTrue();
     expect(config('queue.connections.database_long.retry_after'))->toBe(300);
-    expect(config('queue.failed.driver'))->toBe('database-uuids');
+    expect(config('queue.failed.driver'))->toBeNull();
 });
 
 test('accepted request IDs are included in durable queue payloads', function () {
