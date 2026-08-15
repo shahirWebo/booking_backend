@@ -71,3 +71,12 @@ test('users table rejects unsupported account statuses', function () {
         'status' => 'unknown',
     ]))->toThrow(QueryException::class);
 });
+
+test('users table rejects updates to unsupported account statuses', function () {
+    $user = User::factory()->create();
+
+    expect(fn () => DB::table('users')
+        ->where('id', $user->id)
+        ->update(['status' => 'unknown']))
+        ->toThrow(QueryException::class);
+});
