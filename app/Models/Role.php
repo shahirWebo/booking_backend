@@ -28,5 +28,13 @@ class Role extends Model
         return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id');
     }
 
-    // The permission relationship is introduced by its mapping task.
+    /**
+     * The permissions assigned to this role.
+     *
+     * @return BelongsToMany<Permission, $this>
+     */
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
+    }
 }
