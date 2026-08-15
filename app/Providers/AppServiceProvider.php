@@ -55,6 +55,10 @@ class AppServiceProvider extends ServiceProvider
             app()->environment(),
             config('otp.hash_pepper'),
         );
+        EnvironmentConfiguration::assertOtpLookupHmacKey(
+            app()->environment(),
+            config('otp.lookup_hmac_key'),
+        );
 
         Date::use(CarbonImmutable::class);
 

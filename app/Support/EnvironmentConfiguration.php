@@ -23,4 +23,12 @@ final class EnvironmentConfiguration
             throw new LogicException("OTP_HASH_PEPPER must be configured in the {$environment} environment.");
         }
     }
+
+    public static function assertOtpLookupHmacKey(string $environment, mixed $key): void
+    {
+        if (in_array($environment, ['staging', 'production'], true)
+            && (! is_string($key) || $key === '')) {
+            throw new LogicException("OTP_LOOKUP_HMAC_KEY must be configured in the {$environment} environment.");
+        }
+    }
 }
