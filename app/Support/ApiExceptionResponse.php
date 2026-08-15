@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Domain\Auth\Exceptions\AccountAccessRestrictedException;
+use App\Domain\Users\Enums\UserStatus;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +21,11 @@ final class ApiExceptionResponse
     public static function from(Throwable $exception): JsonResponse
     {
         [$status, $code, $message] = match (true) {
+            $exception instanceof AccountAccessRestrictedException => [
+                403,
+                $exception->status === UserStatus::Blocked ? 'USER_BLOCKED' : 'USER_SUSPENDED',
+                'This account cannot access the API.',
+            ],
             $exception instanceof ValidationException => [
                 422,
                 'VALIDATION_ERROR',

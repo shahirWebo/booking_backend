@@ -38,3 +38,20 @@ test('the current-user profile endpoint requires an authenticated bearer token',
         ->assertJsonPath('success', false)
         ->assertJsonPath('code', 'UNAUTHENTICATED');
 });
+
+test('blocked and suspended users cannot use an existing bearer token', function (UserStatus $status, string $code) {
+    $user = User::factory()->create(['status' => UserStatus::Active]);
+    $token = $user->createToken('current-device');
+    $user->update(['status' => $status]);
+
+    $this->withToken($token->plainTextToken)
+        ->getJson(route('api.v1.auth.user.show'))
+        ->assertForbidden()
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('code', $code);
+
+    expect($token->accessToken->fresh())->toBeNull();
+})->with([
+    'blocked user' => [UserStatus::Blocked, 'USER_BLOCKED'],
+    'suspended user' => [UserStatus::Suspended, 'USER_SUSPENDED'],
+]);
