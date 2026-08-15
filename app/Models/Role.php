@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,5 +18,15 @@ use Illuminate\Support\Carbon;
 #[Fillable(['name', 'code', 'description'])]
 class Role extends Model
 {
-    // User and permission relationships are introduced by their mapping tasks.
+    /**
+     * The users assigned this role.
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id');
+    }
+
+    // The permission relationship is introduced by its mapping task.
 }
