@@ -51,6 +51,40 @@ final class OpenApiDocument
                         ],
                     ],
                 ],
+                '/api/v1/auth/otp-verifications' => [
+                    'post' => [
+                        'tags' => ['Authentication'],
+                        'operationId' => 'verifyOtp',
+                        'summary' => 'Verify an SMS OTP and establish API authentication.',
+                        'description' => 'Consumes one valid OTP challenge and returns a bearer token. Invalid, expired, consumed, superseded, and attempt-exhausted challenges have the same response. This response must not be cached.',
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/OtpVerificationInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The OTP was verified and a bearer credential was issued.',
+                                'headers' => [
+                                    'Cache-Control' => [
+                                        'schema' => ['type' => 'string', 'const' => 'no-store, private'],
+                                    ],
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/OtpAuthenticationResponse'],
+                                    ],
+                                ],
+                            ],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
                 '/api/v1' => [
                     'get' => [
                         'tags' => ['Platform'],
@@ -214,6 +248,40 @@ final class OpenApiDocument
                                 'maxLength' => 64,
                                 'description' => 'A supported mobile number. The server normalizes accepted input to E.164 and never returns it.',
                             ],
+                        ],
+                    ],
+                    'OtpVerificationInput' => [
+                        'type' => 'object',
+                        'required' => ['otp_request_id', 'code'],
+                        'properties' => [
+                            'otp_request_id' => [
+                                'type' => 'string',
+                                'description' => 'The opaque OTP request ULID returned when the challenge was accepted.',
+                            ],
+                            'code' => [
+                                'type' => 'string',
+                                'pattern' => '^\\d{6}$',
+                                'description' => 'The six-digit code received by SMS.',
+                            ],
+                        ],
+                    ],
+                    'OtpAuthenticationResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'object',
+                                'required' => ['access_token', 'token_type'],
+                                'properties' => [
+                                    'access_token' => [
+                                        'type' => 'string',
+                                        'description' => 'Bearer credential returned only once. Store it securely and never log it.',
+                                    ],
+                                    'token_type' => ['type' => 'string', 'const' => 'Bearer'],
+                                ],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],
                     ],
                     'HealthStatus' => [
