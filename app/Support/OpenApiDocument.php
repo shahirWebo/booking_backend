@@ -85,6 +85,24 @@ final class OpenApiDocument
                         ],
                     ],
                 ],
+                '/api/v1/auth/session' => [
+                    'delete' => [
+                        'tags' => ['Authentication'],
+                        'operationId' => 'logout',
+                        'summary' => 'Revoke the current bearer credential.',
+                        'description' => 'Revokes only the bearer token used for this request. Other active sessions remain authenticated.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '204' => [
+                                'description' => 'The current bearer credential was revoked.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                        ],
+                    ],
+                ],
                 '/api/v1' => [
                     'get' => [
                         'tags' => ['Platform'],
@@ -143,6 +161,23 @@ final class OpenApiDocument
                     ],
                 ],
                 'responses' => [
+                    'UnauthenticatedError' => [
+                        'description' => 'Authentication is required.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                'example' => [
+                                    'success' => false,
+                                    'code' => 'UNAUTHENTICATED',
+                                    'message' => 'Authentication is required.',
+                                    'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+                                ],
+                            ],
+                        ],
+                    ],
                     'ValidationError' => [
                         'description' => 'The request contains invalid fields.',
                         'headers' => [
@@ -290,6 +325,13 @@ final class OpenApiDocument
                         'properties' => [
                             'status' => ['type' => 'string', 'const' => 'up'],
                         ],
+                    ],
+                ],
+                'securitySchemes' => [
+                    'BearerAuth' => [
+                        'type' => 'http',
+                        'scheme' => 'bearer',
+                        'bearerFormat' => 'Sanctum token',
                     ],
                 ],
             ],
