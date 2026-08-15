@@ -61,6 +61,12 @@
         "lint:check": [
             "pint --parallel --test"
         ],
+        "openapi:generate": [
+            "@php artisan openapi:generate --ansi"
+        ],
+        "openapi:check": [
+            "@php artisan openapi:generate --check --ansi"
+        ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
             "npm run lint:check",
