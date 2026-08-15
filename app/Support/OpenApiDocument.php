@@ -48,6 +48,7 @@ final class OpenApiDocument
                         'responses' => [
                             '422' => ['$ref' => '#/components/responses/ValidationError'],
                             '503' => ['$ref' => '#/components/responses/ServiceUnavailableError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
                         ],
                     ],
                 ],
@@ -80,7 +81,33 @@ final class OpenApiDocument
                                     ],
                                 ],
                             ],
-                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '422' => ['$ref' => '#/components/responses/OtpVerificationRejectedError'],
+                            '403' => ['$ref' => '#/components/responses/RestrictedAccountError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
+                '/api/v1/auth/user' => [
+                    'get' => [
+                        'tags' => ['Authentication'],
+                        'operationId' => 'getCurrentUser',
+                        'summary' => 'Get the current authenticated user.',
+                        'description' => 'Returns the public profile for the user represented by the current bearer credential.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The current authenticated user.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/UserProfileResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/RestrictedAccountError'],
                             '429' => ['$ref' => '#/components/responses/RateLimitedError'],
                         ],
                     ],
@@ -100,6 +127,8 @@ final class OpenApiDocument
                                 ],
                             ],
                             '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/RestrictedAccountError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
                         ],
                     ],
                 ],
@@ -198,6 +227,33 @@ final class OpenApiDocument
                             ],
                         ],
                     ],
+                    'OtpVerificationRejectedError' => [
+                        'description' => 'The request fields are invalid, or the OTP challenge is invalid, expired, consumed, superseded, or exhausted. Challenge lifecycle states are deliberately not disclosed.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'oneOf' => [
+                                        ['$ref' => '#/components/schemas/ValidationErrorResponse'],
+                                        ['$ref' => '#/components/schemas/OtpVerificationRejectedErrorResponse'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'RestrictedAccountError' => [
+                        'description' => 'The authenticated account is blocked or suspended. The current bearer credential is revoked.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/RestrictedAccountErrorResponse'],
+                            ],
+                        ],
+                    ],
                     'ServiceUnavailableError' => [
                         'description' => 'A required service is temporarily unavailable.',
                         'headers' => [
@@ -274,6 +330,31 @@ final class OpenApiDocument
                             ],
                         ],
                     ],
+                    'OtpVerificationRejectedErrorResponse' => [
+                        'allOf' => [
+                            ['$ref' => '#/components/schemas/ErrorResponse'],
+                            [
+                                'type' => 'object',
+                                'properties' => [
+                                    'code' => ['type' => 'string', 'const' => 'VALIDATION_ERROR'],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'RestrictedAccountErrorResponse' => [
+                        'allOf' => [
+                            ['$ref' => '#/components/schemas/ErrorResponse'],
+                            [
+                                'type' => 'object',
+                                'properties' => [
+                                    'code' => [
+                                        'type' => 'string',
+                                        'enum' => ['USER_BLOCKED', 'USER_SUSPENDED'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
                     'OtpRequestInput' => [
                         'type' => 'object',
                         'required' => ['mobile'],
@@ -314,6 +395,25 @@ final class OpenApiDocument
                                         'description' => 'Bearer credential returned only once. Store it securely and never log it.',
                                     ],
                                     'token_type' => ['type' => 'string', 'const' => 'Bearer'],
+                                ],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'UserProfileResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'object',
+                                'required' => ['id', 'name', 'mobile_number', 'email', 'status'],
+                                'properties' => [
+                                    'id' => ['type' => 'integer', 'minimum' => 1],
+                                    'name' => ['type' => ['string', 'null']],
+                                    'mobile_number' => ['type' => ['string', 'null'], 'description' => 'The user\'s verified mobile number in E.164 format when present.'],
+                                    'email' => ['type' => ['string', 'null'], 'format' => 'email'],
+                                    'status' => ['type' => 'string', 'const' => 'active'],
                                 ],
                             ],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
