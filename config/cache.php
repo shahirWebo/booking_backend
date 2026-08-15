@@ -102,6 +102,11 @@ return [
             'connection' => env('REDIS_RATE_LIMITER_CONNECTION', 'rate_limiter'),
         ],
 
+        'scheduler' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_SCHEDULER_CONNECTION', 'cache_locks'),
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),
