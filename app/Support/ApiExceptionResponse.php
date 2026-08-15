@@ -66,7 +66,13 @@ final class ApiExceptionResponse
         $response = response()->json($payload, $status);
 
         if ($exception instanceof HttpExceptionInterface) {
-            foreach (['Allow', 'Retry-After', 'WWW-Authenticate'] as $header) {
+            foreach ([
+                'Allow',
+                'Retry-After',
+                'WWW-Authenticate',
+                'X-RateLimit-Limit',
+                'X-RateLimit-Remaining',
+            ] as $header) {
                 if (array_key_exists($header, $exception->getHeaders())) {
                     $response->headers->set($header, $exception->getHeaders()[$header]);
                 }

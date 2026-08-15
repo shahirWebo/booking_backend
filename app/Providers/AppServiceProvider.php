@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Support\EnvironmentConfiguration;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobExceptionOccurred;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureRateLimiting();
         $this->configureQueue();
     }
 
@@ -92,6 +95,35 @@ class AppServiceProvider extends ServiceProvider
         Queue::failing(function (JobFailed $event) use ($clearContext): void {
             $clearContext();
         });
+    }
+
+    /**
+     * Configure the shared baseline limit for versioned API routes.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request): Limit {
+            return Limit::perMinute((int) config('rate_limiting.api.per_minute'))
+                ->by($this->apiRateLimitKey($request));
+        });
+    }
+
+    /**
+     * Build a privacy-safe, bounded rate-limit key from the current caller.
+     */
+    protected function apiRateLimitKey(Request $request): string
+    {
+        $user = $request->user();
+
+        if ($user !== null) {
+            return 'v1:api:user:'.$user->getAuthIdentifier();
+        }
+
+        return 'v1:api:ip:'.hash_hmac(
+            'sha256',
+            (string) $request->ip(),
+            (string) config('app.key'),
+        );
     }
 
     /**

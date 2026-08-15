@@ -192,6 +192,19 @@ return [
             'backoff_cap' => env('REDIS_CACHE_LOCK_BACKOFF_CAP', env('REDIS_CACHE_BACKOFF_CAP', env('REDIS_BACKOFF_CAP', 1000))),
         ],
 
+        'rate_limiter' => [
+            'url' => env('REDIS_RATE_LIMITER_URL'),
+            'host' => env('REDIS_RATE_LIMITER_HOST', env('REDIS_HOST', '127.0.0.1')),
+            'username' => env('REDIS_RATE_LIMITER_USERNAME', env('REDIS_USERNAME')),
+            'password' => env('REDIS_RATE_LIMITER_PASSWORD', env('REDIS_PASSWORD')),
+            'port' => env('REDIS_RATE_LIMITER_PORT', env('REDIS_PORT', '6379')),
+            'database' => env('REDIS_RATE_LIMITER_DB', '3'),
+            'max_retries' => env('REDIS_RATE_LIMITER_MAX_RETRIES', env('REDIS_MAX_RETRIES', 3)),
+            'backoff_algorithm' => env('REDIS_RATE_LIMITER_BACKOFF_ALGORITHM', env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter')),
+            'backoff_base' => env('REDIS_RATE_LIMITER_BACKOFF_BASE', env('REDIS_BACKOFF_BASE', 100)),
+            'backoff_cap' => env('REDIS_RATE_LIMITER_BACKOFF_CAP', env('REDIS_BACKOFF_CAP', 1000)),
+        ],
+
     ],
 
 ];
