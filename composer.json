@@ -67,12 +67,17 @@
         "openapi:check": [
             "@php artisan openapi:generate --check --ansi"
         ],
+        "ci:backend": [
+            "Composer\\Config::disableProcessTimeout",
+            "@openapi:check",
+            "@test"
+        ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
             "npm run lint:check",
             "npm run format:check",
             "npm run types:check",
-            "@test"
+            "@ci:backend"
         ],
         "types:check": [
             "phpstan analyse"
