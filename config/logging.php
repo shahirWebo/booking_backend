@@ -1,5 +1,7 @@
 <?php
 
+use App\Logging\RedactSensitiveLogContext;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -54,8 +56,25 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'single')),
+            'channels' => explode(',', (string) env('LOG_STACK', 'structured')),
             'ignore_exceptions' => false,
+        ],
+
+        'structured' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => env('LOG_STRUCTURED_STREAM', 'php://stderr'),
+            ],
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => [
+                'appendNewline' => true,
+                'includeStacktraces' => false,
+            ],
+            'processors' => [
+                RedactSensitiveLogContext::class,
+            ],
         ],
 
         'single' => [
