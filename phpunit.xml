@@ -22,6 +22,7 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CORS_ALLOWED_ORIGINS" value="http://spa.test,http://other.test"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="RATE_LIMITER_STORE" value="array"/>
         <env name="SCHEDULE_LOCK_STORE" value="array"/>
