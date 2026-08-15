@@ -45,7 +45,7 @@ test('forwarded headers from an untrusted address are ignored', function () {
         ->assertJson([
             'client_ip' => '203.0.113.10',
             'host' => 'localhost',
-            'port' => 8000,
+            'port' => 80,
             'scheme' => 'http',
         ]);
 });
