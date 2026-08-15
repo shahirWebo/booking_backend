@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\OtpRequest;
+
 test('the OTP request endpoint is publicly reachable but fails closed before challenge issuance is implemented', function () {
     $this->postJson(route('api.v1.auth.otp_requests.store'), [
         'mobile' => '+919876543210',
@@ -11,6 +13,8 @@ test('the OTP request endpoint is publicly reachable but fails closed before cha
             'message' => 'The service is temporarily unavailable.',
             'meta' => [],
         ]);
+
+    expect(OtpRequest::query()->count())->toBe(0);
 });
 
 test('the OTP request endpoint normalizes a supported mobile number before its remaining controls fail closed', function () {
