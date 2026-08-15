@@ -22,11 +22,26 @@ final class OpenApiDocument
             ],
             'tags' => [
                 [
+                    'name' => 'Authentication',
+                    'description' => 'Passwordless authentication challenge endpoints.',
+                ],
+                [
                     'name' => 'Platform',
                     'description' => 'Platform-level API and liveness endpoints.',
                 ],
             ],
             'paths' => [
+                '/api/v1/auth/otp-requests' => [
+                    'post' => [
+                        'tags' => ['Authentication'],
+                        'operationId' => 'requestOtp',
+                        'summary' => 'Request an SMS OTP authentication challenge.',
+                        'description' => 'The public endpoint is registered but currently fails closed until its validation, issuance, anti-abuse, and provider-delivery controls are implemented.',
+                        'responses' => [
+                            '503' => ['$ref' => '#/components/responses/ServiceUnavailableError'],
+                        ],
+                    ],
+                ],
                 '/api/v1' => [
                     'get' => [
                         'tags' => ['Platform'],
@@ -85,6 +100,23 @@ final class OpenApiDocument
                     ],
                 ],
                 'responses' => [
+                    'ServiceUnavailableError' => [
+                        'description' => 'A required service is temporarily unavailable.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                'example' => [
+                                    'success' => false,
+                                    'code' => 'SERVICE_UNAVAILABLE',
+                                    'message' => 'The service is temporarily unavailable.',
+                                    'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+                                ],
+                            ],
+                        ],
+                    ],
                     'RateLimitedError' => [
                         'description' => 'The caller exceeded the configured rate limit.',
                         'headers' => [
