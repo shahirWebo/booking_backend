@@ -19,9 +19,9 @@ final class OtpChallengeVerifier
      *
      * @throws OtpAttemptsExceededException|OtpInvalidOrExpiredException
      */
-    public function verify(string $challengeId, string $code): OtpRequest
+    public function verify(string $challengeId, string $code, ?\Closure $onVerified = null): OtpRequest
     {
-        $result = DB::transaction(function () use ($challengeId, $code): OtpRequest|string {
+        $result = DB::transaction(function () use ($challengeId, $code, $onVerified): OtpRequest|string {
             $challenge = OtpRequest::query()->lockForUpdate()->find($challengeId);
 
             if ($challenge === null) {
@@ -80,6 +80,10 @@ final class OtpChallengeVerifier
                 'status' => OtpRequestStatus::Verified,
                 'consumed_at' => $now,
             ])->save();
+
+            if ($onVerified !== null) {
+                $onVerified($challenge);
+            }
 
             return $challenge;
         });
