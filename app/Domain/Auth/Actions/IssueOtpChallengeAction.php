@@ -52,7 +52,7 @@ final class IssueOtpChallengeAction
             $this->otpRequests->supersedeActive($lookup, $purpose, $activeStatuses, $now);
 
             $challengeId = (string) Str::ulid();
-            $code = $this->codeGenerator->generate();
+            $code = config('app.env') === 'local' ? 123456 : $this->codeGenerator->generate();
             $challenge = $this->otpRequests->create($challengeId, [
                 'purpose' => $purpose,
                 'schema_version' => 1,
