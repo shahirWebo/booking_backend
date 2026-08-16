@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\EnsureUserHasPermission;
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequestCorrelationId;
@@ -37,6 +39,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RequestCorrelationId::class);
         $middleware->alias([
             'active-user' => EnsureActiveUser::class,
+            'permission' => EnsureUserHasPermission::class,
+            'role' => EnsureUserHasRole::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
