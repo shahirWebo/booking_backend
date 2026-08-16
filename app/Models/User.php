@@ -7,6 +7,7 @@ use App\Domain\Users\Enums\UserStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -47,6 +48,28 @@ class User extends Authenticatable implements PasskeyUser
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+    }
+
+    /**
+     * Determine whether the user currently holds a role with the given stable code.
+     */
+    public function hasRole(string $roleCode): bool
+    {
+        return $roleCode !== ''
+            && $this->roles()->where('roles.code', $roleCode)->exists();
+    }
+
+    /**
+     * Determine whether any current role grants the given stable permission code.
+     */
+    public function hasPermission(string $permissionCode): bool
+    {
+        return $permissionCode !== ''
+            && $this->roles()
+                ->whereHas('permissions', function (Builder $query) use ($permissionCode): void {
+                    $query->where('permissions.code', $permissionCode);
+                })
+                ->exists();
     }
 
     /**
