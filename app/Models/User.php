@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -48,6 +49,28 @@ class User extends Authenticatable implements PasskeyUser
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+    }
+
+    /**
+     * The vendor memberships for this user.
+     *
+     * @return HasMany<VendorMembership, $this>
+     */
+    public function vendorMemberships(): HasMany
+    {
+        return $this->hasMany(VendorMembership::class);
+    }
+
+    /**
+     * The vendors this user has active memberships in.
+     *
+     * @return BelongsToMany<Vendor, $this>
+     */
+    public function vendors(): BelongsToMany
+    {
+        return $this->belongsToMany(Vendor::class, 'vendor_memberships', 'user_id', 'vendor_id')
+            ->select('vendors.*')
+            ->where('vendor_memberships.status', 'active');
     }
 
     /**
