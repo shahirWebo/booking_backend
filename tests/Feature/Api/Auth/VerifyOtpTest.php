@@ -1,8 +1,8 @@
 <?php
 
+use App\Domain\Auth\Actions\IssueOtpChallengeAction;
 use App\Domain\Auth\Enums\OtpRequestPurpose;
 use App\Domain\Auth\Enums\OtpRequestStatus;
-use App\Domain\Auth\Services\OtpChallengeIssuer;
 use App\Domain\Users\Enums\UserStatus;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -16,7 +16,7 @@ afterEach(function (): void {
 });
 
 test('a valid OTP creates a mobile user and issues a bearer token', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [
         'otp_request_id' => $issued['challenge']->id,
@@ -36,7 +36,7 @@ test('a valid OTP creates a mobile user and issues a bearer token', function () 
 });
 
 test('a verified challenge cannot be replayed to create another bearer token', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     $payload = [
         'otp_request_id' => $issued['challenge']->id,
@@ -62,7 +62,7 @@ test('a verified challenge cannot be replayed to create another bearer token', f
 
 test('an expired OTP verification remains non-disclosing and does not create a session', function () {
     CarbonImmutable::setTestNow('2026-08-15 12:00:00 UTC');
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     CarbonImmutable::setTestNow('2026-08-15 12:05:00 UTC');
 
@@ -84,7 +84,7 @@ test('an expired OTP verification remains non-disclosing and does not create a s
 });
 
 test('an OTP verification does not disclose invalid or exhausted challenge state', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     foreach (range(1, 5) as $_) {
         $this->postJson(route('api.v1.auth.otp_verifications.store'), [
@@ -102,7 +102,7 @@ test('an OTP verification does not disclose invalid or exhausted challenge state
 });
 
 test('a single incorrect code does not prevent a later correct verification', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [
         'otp_request_id' => $issued['challenge']->id,
@@ -126,7 +126,7 @@ test('blocked and suspended users cannot establish a bearer-token session', func
         'mobile_number' => $mobileNumber,
         'status' => $status,
     ]);
-    $issued = app(OtpChallengeIssuer::class)->issue($mobileNumber, OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute($mobileNumber, OtpRequestPurpose::Authentication);
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [
         'otp_request_id' => $issued['challenge']->id,

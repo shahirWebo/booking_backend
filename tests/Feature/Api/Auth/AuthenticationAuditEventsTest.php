@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Auth\Actions\IssueOtpChallengeAction;
 use App\Domain\Auth\Enums\OtpRequestPurpose;
-use App\Domain\Auth\Services\OtpChallengeIssuer;
 use App\Domain\Users\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 test('issuing an authentication challenge records a minimized audit event', function () {
     Log::spy();
 
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     Log::shouldHaveReceived('info')
         ->once()
@@ -27,7 +27,7 @@ test('issuing an authentication challenge records a minimized audit event', func
 });
 
 test('successful authentication records opaque challenge and user identifiers only', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
     Log::spy();
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [
@@ -49,7 +49,7 @@ test('successful authentication records opaque challenge and user identifiers on
 });
 
 test('failed OTP verification records a non-disclosing audit outcome', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
     Log::spy();
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [
@@ -67,7 +67,7 @@ test('failed OTP verification records a non-disclosing audit outcome', function 
 
 test('restricted authentication and logout record session audit events', function () {
     $user = User::factory()->create(['status' => UserStatus::Blocked]);
-    $issued = app(OtpChallengeIssuer::class)->issue($user->mobile_number, OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute($user->mobile_number, OtpRequestPurpose::Authentication);
     Log::spy();
 
     $this->postJson(route('api.v1.auth.otp_verifications.store'), [

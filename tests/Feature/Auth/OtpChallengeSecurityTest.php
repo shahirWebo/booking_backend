@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Auth\Actions\IssueOtpChallengeAction;
+use App\Domain\Auth\Actions\VerifyOtpAction;
 use App\Domain\Auth\Data\OtpDeliveryOutcome;
 use App\Domain\Auth\Data\OtpDeliveryRequest;
 use App\Domain\Auth\Data\OtpDeliveryResult;
@@ -9,8 +11,6 @@ use App\Domain\Auth\Exceptions\OtpAttemptsExceededException;
 use App\Domain\Auth\Exceptions\OtpInvalidOrExpiredException;
 use App\Domain\Auth\Exceptions\OtpRateLimitExceededException;
 use App\Domain\Auth\Exceptions\OtpResendCooldownException;
-use App\Domain\Auth\Services\OtpChallengeIssuer;
-use App\Domain\Auth\Services\OtpChallengeVerifier;
 use App\Domain\Auth\Services\OtpPrivacyKeyDeriver;
 use App\Domain\Auth\Services\OtpRequestRateLimiter;
 use App\Models\OtpRequest;
@@ -38,11 +38,11 @@ function persistedOtpRequest(string $id): OtpRequest
 
 test('an OTP challenge expires by authoritative UTC time before verification', function () {
     CarbonImmutable::setTestNow('2026-08-15 12:00:00 UTC');
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     CarbonImmutable::setTestNow('2026-08-15 12:05:00 UTC');
 
-    expect(fn () => app(OtpChallengeVerifier::class)->verify($issued['challenge']->id, $issued['code']))
+    expect(fn () => app(VerifyOtpAction::class)->execute($issued['challenge']->id, $issued['code']))
         ->toThrow(OtpInvalidOrExpiredException::class);
 
     $persistedChallenge = persistedOtpRequest($issued['challenge']->id);
@@ -53,14 +53,14 @@ test('an OTP challenge expires by authoritative UTC time before verification', f
 
 test('an accepted resend is blocked during the cooldown then supersedes the old challenge', function () {
     CarbonImmutable::setTestNow('2026-08-15 12:00:00 UTC');
-    $issuer = app(OtpChallengeIssuer::class);
-    $first = $issuer->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $issuer = app(IssueOtpChallengeAction::class);
+    $first = $issuer->execute('+919876543210', OtpRequestPurpose::Authentication);
 
-    expect(fn () => $issuer->issue('+919876543210', OtpRequestPurpose::Authentication))
+    expect(fn () => $issuer->execute('+919876543210', OtpRequestPurpose::Authentication))
         ->toThrow(OtpResendCooldownException::class);
 
     CarbonImmutable::setTestNow('2026-08-15 12:01:00 UTC');
-    $second = $issuer->issue('+919876543210', OtpRequestPurpose::Authentication);
+    $second = $issuer->execute('+919876543210', OtpRequestPurpose::Authentication);
 
     expect($first['challenge']->fresh()->status)->toBe(OtpRequestStatus::Superseded)
         ->and($second['challenge']->id)->not->toBe($first['challenge']->id)
@@ -68,17 +68,17 @@ test('an accepted resend is blocked during the cooldown then supersedes the old 
 });
 
 test('the fifth invalid verification permanently exhausts the OTP challenge', function () {
-    $issued = app(OtpChallengeIssuer::class)->issue('+919876543210', OtpRequestPurpose::Authentication);
-    $verifier = app(OtpChallengeVerifier::class);
+    $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
+    $verifier = app(VerifyOtpAction::class);
 
     foreach (range(1, 4) as $_) {
-        expect(fn () => $verifier->verify($issued['challenge']->id, '000000'))
+        expect(fn () => $verifier->execute($issued['challenge']->id, '000000'))
             ->toThrow(OtpInvalidOrExpiredException::class);
     }
 
-    expect(fn () => $verifier->verify($issued['challenge']->id, '000000'))
+    expect(fn () => $verifier->execute($issued['challenge']->id, '000000'))
         ->toThrow(OtpAttemptsExceededException::class);
-    expect(fn () => $verifier->verify($issued['challenge']->id, $issued['code']))
+    expect(fn () => $verifier->execute($issued['challenge']->id, $issued['code']))
         ->toThrow(OtpAttemptsExceededException::class);
 
     $persistedChallenge = persistedOtpRequest($issued['challenge']->id);

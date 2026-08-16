@@ -36,7 +36,7 @@ final class OpenApiDocument
                         'tags' => ['Authentication'],
                         'operationId' => 'requestOtp',
                         'summary' => 'Request an SMS OTP authentication challenge.',
-                        'description' => 'The endpoint accepts and normalizes supported mobile numbers, then currently fails closed until challenge issuance, anti-abuse, and provider-delivery controls are implemented.',
+                        'description' => 'The endpoint accepts and normalizes supported mobile numbers, applies privacy-safe abuse controls, then accepts an opaque OTP challenge for asynchronous delivery. A successful response does not assert that an SMS was delivered and must not be cached.',
                         'requestBody' => [
                             'required' => true,
                             'content' => [
@@ -46,6 +46,20 @@ final class OpenApiDocument
                             ],
                         ],
                         'responses' => [
+                            '202' => [
+                                'description' => 'The OTP challenge was accepted for asynchronous delivery.',
+                                'headers' => [
+                                    'Cache-Control' => [
+                                        'schema' => ['type' => 'string', 'const' => 'no-store, private'],
+                                    ],
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/OtpRequestAcceptedResponse'],
+                                    ],
+                                ],
+                            ],
                             '422' => ['$ref' => '#/components/responses/ValidationError'],
                             '503' => ['$ref' => '#/components/responses/ServiceUnavailableError'],
                             '429' => ['$ref' => '#/components/responses/RateLimitedError'],
@@ -364,6 +378,23 @@ final class OpenApiDocument
                                 'maxLength' => 64,
                                 'description' => 'A supported mobile number. The server normalizes accepted input to E.164 and never returns it.',
                             ],
+                        ],
+                    ],
+                    'OtpRequestAcceptedResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'object',
+                                'required' => ['otp_request_id', 'expires_at', 'resend_available_at'],
+                                'properties' => [
+                                    'otp_request_id' => ['$ref' => '#/components/schemas/RequestId'],
+                                    'expires_at' => ['type' => 'string', 'format' => 'date-time'],
+                                    'resend_available_at' => ['type' => 'string', 'format' => 'date-time'],
+                                ],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],
                     ],
                     'OtpVerificationInput' => [

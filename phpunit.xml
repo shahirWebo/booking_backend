@@ -28,6 +28,12 @@
         <env name="OTP_LOOKUP_HMAC_KEY" value="testing-otp-lookup-hmac-key-not-for-deployment"/>
         <env name="OTP_DELIVERY_PROVIDER" value="fake"/>
         <env name="OTP_FAKE_DELIVERY_OUTCOME" value="accepted"/>
+        <env name="OTP_RATE_LIMIT_MOBILE_15_MINUTES" value="3"/>
+        <env name="OTP_RATE_LIMIT_MOBILE_HOUR" value="5"/>
+        <env name="OTP_RATE_LIMIT_MOBILE_DAY" value="10"/>
+        <env name="OTP_RATE_LIMIT_IP_15_MINUTES" value="10"/>
+        <env name="OTP_RATE_LIMIT_IP_HOUR" value="30"/>
+        <env name="OTP_RATE_LIMIT_INSTALLATION_15_MINUTES" value="10"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_PREFIX" value="turf_booking:testing:cache:"/>
         <env name="CORS_ALLOWED_ORIGINS" value="http://spa.test,http://other.test"/>

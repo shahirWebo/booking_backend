@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Domain\Auth\Actions\VerifyOtpAction;
 use App\Domain\Auth\Exceptions\OtpAttemptsExceededException;
 use App\Domain\Auth\Exceptions\OtpInvalidOrExpiredException;
-use App\Domain\Auth\Services\AuthenticationAuditLogger;
-use App\Domain\Auth\Services\OtpAuthenticationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Support\ApiResponse;
@@ -16,19 +15,13 @@ final class VerifyOtpController extends Controller
 {
     public function __invoke(
         VerifyOtpRequest $request,
-        OtpAuthenticationService $authentication,
-        AuthenticationAuditLogger $auditLogger,
+        VerifyOtpAction $verifyOtp,
     ): JsonResponse {
         $validated = $request->validated();
 
         try {
-            $authenticated = $authentication->authenticate($validated['otp_request_id'], $validated['code']);
-        } catch (OtpInvalidOrExpiredException|OtpAttemptsExceededException $exception) {
-            $auditLogger->authenticationFailed(
-                $validated['otp_request_id'],
-                $exception instanceof OtpAttemptsExceededException ? 'attempt_limit_exhausted' : 'invalid_or_expired',
-            );
-
+            $authenticated = $verifyOtp->execute($validated['otp_request_id'], $validated['code']);
+        } catch (OtpInvalidOrExpiredException|OtpAttemptsExceededException) {
             // Keep challenge lifecycle outcomes indistinguishable to callers.
             throw new UnprocessableEntityHttpException('The OTP is invalid or expired.');
         }

@@ -1,18 +1,24 @@
 <?php
 
-namespace App\Domain\Auth\Services;
+namespace App\Domain\Auth\Actions;
 
 use App\Domain\Auth\Enums\OtpRequestPurpose;
 use App\Domain\Auth\Enums\OtpRequestStatus;
 use App\Domain\Auth\Exceptions\OtpResendCooldownException;
+use App\Domain\Auth\Repositories\OtpRequestRepository;
+use App\Domain\Auth\Services\AuthenticationAuditLogger;
+use App\Domain\Auth\Services\OtpCodeGenerator;
+use App\Domain\Auth\Services\OtpCodeHasher;
+use App\Domain\Auth\Services\OtpPrivacyKeyDeriver;
 use App\Models\OtpRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-final class OtpChallengeIssuer
+final class IssueOtpChallengeAction
 {
     public function __construct(
+        private readonly OtpRequestRepository $otpRequests,
         private readonly OtpCodeGenerator $codeGenerator,
         private readonly OtpCodeHasher $codeHasher,
         private readonly OtpPrivacyKeyDeriver $keyDeriver,
@@ -24,35 +30,16 @@ final class OtpChallengeIssuer
      *
      * @throws OtpResendCooldownException
      */
-    public function issue(string $mobileNumber, OtpRequestPurpose $purpose): array
+    public function execute(string $mobileNumber, OtpRequestPurpose $purpose): array
     {
         $issued = DB::transaction(function () use ($mobileNumber, $purpose): array {
             $now = CarbonImmutable::now('UTC');
             $lookup = $this->keyDeriver->mobileLookup($mobileNumber, $purpose->value);
-            $activeStatuses = [
-                OtpRequestStatus::PendingDelivery->value,
-                OtpRequestStatus::ProviderAccepted->value,
-                OtpRequestStatus::DeliveryUnknown->value,
-            ];
+            $activeStatuses = $this->activeStatuses();
 
-            OtpRequest::query()
-                ->where('mobile_number_lookup_hmac', $lookup)
-                ->where('purpose', $purpose->value)
-                ->whereIn('status', $activeStatuses)
-                ->where('expires_at', '<=', $now)
-                ->lockForUpdate()
-                ->update([
-                    'status' => OtpRequestStatus::Expired->value,
-                    'terminal_reason' => 'expired',
-                    'updated_at' => $now,
-                ]);
+            $this->otpRequests->expireActive($lookup, $purpose, $activeStatuses, $now);
 
-            $latestRequest = OtpRequest::query()
-                ->where('mobile_number_lookup_hmac', $lookup)
-                ->where('purpose', $purpose->value)
-                ->latest('issued_at')
-                ->lockForUpdate()
-                ->first();
+            $latestRequest = $this->otpRequests->latestForUpdate($lookup, $purpose);
 
             if ($latestRequest !== null && $latestRequest->resend_available_at->isFuture()) {
                 $secondsUntilResend = $now->diffInSeconds($latestRequest->resend_available_at, false);
@@ -62,23 +49,17 @@ final class OtpChallengeIssuer
                 );
             }
 
-            OtpRequest::query()
-                ->where('mobile_number_lookup_hmac', $lookup)
-                ->where('purpose', $purpose->value)
-                ->whereIn('status', $activeStatuses)
-                ->lockForUpdate()
-                ->update([
-                    'status' => OtpRequestStatus::Superseded->value,
-                    'terminal_reason' => 'resend',
-                    'updated_at' => $now,
-                ]);
+            $this->otpRequests->supersedeActive($lookup, $purpose, $activeStatuses, $now);
 
-            $challenge = new OtpRequest([
+            $challengeId = (string) Str::ulid();
+            $code = $this->codeGenerator->generate();
+            $challenge = $this->otpRequests->create($challengeId, [
                 'purpose' => $purpose,
                 'schema_version' => 1,
                 'mobile_number_hash_key_version' => 1,
                 'mobile_number_lookup_hmac' => $lookup,
                 'mobile_number_ciphertext' => $mobileNumber,
+                'code_hash' => $this->codeHasher->hash($challengeId, $code),
                 'status' => OtpRequestStatus::PendingDelivery,
                 'failed_verification_attempts' => 0,
                 'delivery_effect_key' => hash('sha256', 'otp_delivery:'.Str::ulid()),
@@ -87,10 +68,6 @@ final class OtpChallengeIssuer
                 'expires_at' => $now->addSeconds(config('otp.code_lifetime_seconds')),
                 'resend_available_at' => $now->addSeconds(config('otp.resend_cooldown_seconds')),
             ]);
-            $challenge->id = (string) Str::ulid();
-            $code = $this->codeGenerator->generate();
-            $challenge->code_hash = $this->codeHasher->hash($challenge->id, $code);
-            $challenge->save();
 
             return ['challenge' => $challenge, 'code' => $code];
         });
@@ -98,5 +75,17 @@ final class OtpChallengeIssuer
         $this->auditLogger->challengeIssued($issued['challenge']);
 
         return $issued;
+    }
+
+    /**
+     * @return list<OtpRequestStatus>
+     */
+    private function activeStatuses(): array
+    {
+        return [
+            OtpRequestStatus::PendingDelivery,
+            OtpRequestStatus::ProviderAccepted,
+            OtpRequestStatus::DeliveryUnknown,
+        ];
     }
 }
