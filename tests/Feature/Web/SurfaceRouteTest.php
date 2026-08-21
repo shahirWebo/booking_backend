@@ -10,6 +10,7 @@ it('registers product surface routes with dedicated URI and name prefixes', func
         'customer.home' => ['GET', 'customer', 'customer/Home'],
         'vendor.home' => ['GET', 'vendor', 'vendor/Home'],
         'admin.home' => ['GET', 'admin', 'admin/Home'],
+        'admin.login' => ['GET', 'admin/login', null],
     ];
 
     foreach ($routes as $name => [$method, $uri, $component]) {
@@ -18,8 +19,11 @@ it('registers product surface routes with dedicated URI and name prefixes', func
         expect($route)
             ->not->toBeNull()
             ->and($route->methods())->toContain($method)
-            ->and($route->uri())->toBe($uri)
-            ->and($route->defaults['component'] ?? null)->toBe($component);
+            ->and($route->uri())->toBe($uri);
+
+        if ($component !== null) {
+            expect($route->defaults['component'] ?? null)->toBe($component);
+        }
     }
 });
 
@@ -34,6 +38,7 @@ it('renders the public surface overview pages', function (string $routeName, str
     ['customer.home', 'customer/Home'],
     ['vendor.home', 'vendor/Home'],
     ['admin.home', 'admin/Home'],
+    ['admin.login', 'auth/AdminLogin'],
 ]);
 
 it('keeps the authenticated workspace hub protected', function (): void {

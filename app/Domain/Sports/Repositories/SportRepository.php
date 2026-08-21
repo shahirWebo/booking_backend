@@ -18,18 +18,18 @@ final class SportRepository
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
      */
     public function create(array $attributes): Sport
     {
         /** @var Sport $sport */
         $sport = Sport::query()->create($attributes);
 
-        return $sport;
+        return $sport->refresh();
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
      */
     public function update(Sport $sport, array $attributes): Sport
     {

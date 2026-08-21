@@ -52,34 +52,40 @@ test('authorized admins can list, create, show, update, and delete sports', func
         'name' => 'Football',
         'code' => 'football',
         'description' => 'Association football supported for turf discovery and booking.',
+        'is_active' => false,
     ])
         ->assertCreated()
         ->assertHeader('Location')
         ->assertJsonPath('success', true)
         ->assertJsonPath('message', 'Sport created.')
         ->assertJsonPath('data.name', 'Football')
-        ->assertJsonPath('data.code', 'football');
+        ->assertJsonPath('data.code', 'football')
+        ->assertJsonPath('data.is_active', false);
 
     $sportId = $createResponse->json('data.id');
 
     getJson(route('api.v1.admin.sports.show', $sportId))
         ->assertOk()
-        ->assertJsonPath('data.description', 'Association football supported for turf discovery and booking.');
+        ->assertJsonPath('data.description', 'Association football supported for turf discovery and booking.')
+        ->assertJsonPath('data.is_active', false);
 
     putJson(route('api.v1.admin.sports.update', $sportId), [
         'name' => 'Box Cricket',
         'code' => 'box_cricket',
         'description' => 'Compact-format cricket commonly played on turfs.',
+        'is_active' => true,
     ])
         ->assertOk()
         ->assertJsonPath('message', 'Sport updated.')
         ->assertJsonPath('data.name', 'Box Cricket')
-        ->assertJsonPath('data.code', 'box_cricket');
+        ->assertJsonPath('data.code', 'box_cricket')
+        ->assertJsonPath('data.is_active', true);
 
     getJson(route('api.v1.admin.sports.index'))
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.name', 'Box Cricket');
+        ->assertJsonPath('data.0.name', 'Box Cricket')
+        ->assertJsonPath('data.0.is_active', true);
 
     deleteJson(route('api.v1.admin.sports.destroy', $sportId))
         ->assertNoContent();
@@ -104,10 +110,11 @@ test('admin sport create and update validate unique fields and supported code fo
         'name' => 'Football',
         'code' => 'Football',
         'description' => 123,
+        'is_active' => 'sometimes',
     ])
         ->assertUnprocessable()
         ->assertJsonPath('code', 'VALIDATION_ERROR')
-        ->assertJsonStructure(['errors' => ['name', 'code', 'description']]);
+        ->assertJsonStructure(['errors' => ['name', 'code', 'description', 'is_active']]);
 
     $otherSport = Sport::query()->create([
         'name' => 'Cricket',
