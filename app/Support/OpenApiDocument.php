@@ -38,6 +38,10 @@ final class OpenApiDocument
                     'description' => 'Administrative amenity master-data management endpoints.',
                 ],
                 [
+                    'name' => 'Admin System Settings',
+                    'description' => 'Administrative non-secret platform configuration endpoints.',
+                ],
+                [
                     'name' => 'Sports',
                     'description' => 'Public sport discovery endpoints.',
                 ],
@@ -493,6 +497,64 @@ final class OpenApiDocument
                         ],
                     ],
                 ],
+                '/api/v1/admin/system-settings' => [
+                    'get' => [
+                        'tags' => ['Admin System Settings'],
+                        'operationId' => 'getAdminSystemSettings',
+                        'summary' => 'Get non-secret system settings for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The current typed system settings snapshot.',
+                                'headers' => [
+                                    'Cache-Control' => [
+                                        'schema' => ['type' => 'string', 'const' => 'private, max-age=300'],
+                                    ],
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SystemSettingsResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'put' => [
+                        'tags' => ['Admin System Settings'],
+                        'operationId' => 'updateAdminSystemSettings',
+                        'summary' => 'Update non-secret system settings for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/SystemSettingsInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The system settings were updated.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SystemSettingsResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
                 '/api/v1' => [
                     'get' => [
                         'tags' => ['Platform'],
@@ -873,6 +935,70 @@ final class OpenApiDocument
                                 'type' => 'array',
                                 'items' => ['$ref' => '#/components/schemas/Amenity'],
                             ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'SystemSettings' => [
+                        'type' => 'object',
+                        'required' => ['booking', 'otp', 'support'],
+                        'properties' => [
+                            'booking' => [
+                                'type' => 'object',
+                                'required' => [
+                                    'booking_hold_minutes',
+                                    'cancellation_cutoff_hours',
+                                    'max_advance_booking_days',
+                                    'min_slot_duration_minutes',
+                                    'max_booking_duration_minutes',
+                                ],
+                                'properties' => [
+                                    'booking_hold_minutes' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 60],
+                                    'cancellation_cutoff_hours' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 168],
+                                    'max_advance_booking_days' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+                                    'min_slot_duration_minutes' => ['type' => 'integer', 'minimum' => 30, 'maximum' => 240],
+                                    'max_booking_duration_minutes' => ['type' => 'integer', 'minimum' => 30, 'maximum' => 600],
+                                ],
+                            ],
+                            'otp' => [
+                                'type' => 'object',
+                                'required' => [
+                                    'code_lifetime_seconds',
+                                    'resend_cooldown_seconds',
+                                    'max_verification_attempts',
+                                ],
+                                'properties' => [
+                                    'code_lifetime_seconds' => ['type' => 'integer', 'minimum' => 60, 'maximum' => 900],
+                                    'resend_cooldown_seconds' => ['type' => 'integer', 'minimum' => 30, 'maximum' => 300],
+                                    'max_verification_attempts' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 10],
+                                ],
+                            ],
+                            'support' => [
+                                'type' => 'object',
+                                'required' => [
+                                    'support_email',
+                                    'support_phone_e164',
+                                    'support_hours',
+                                    'support_timezone',
+                                ],
+                                'properties' => [
+                                    'support_email' => ['type' => 'string', 'format' => 'email', 'maxLength' => 255],
+                                    'support_phone_e164' => ['type' => 'string', 'pattern' => '^\\+[1-9]\\d{7,14}$'],
+                                    'support_hours' => ['type' => 'string', 'maxLength' => 255],
+                                    'support_timezone' => ['type' => 'string'],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'SystemSettingsInput' => [
+                        '$ref' => '#/components/schemas/SystemSettings',
+                    ],
+                    'SystemSettingsResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'message' => ['type' => 'string'],
+                            'data' => ['$ref' => '#/components/schemas/SystemSettings'],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],
                     ],
