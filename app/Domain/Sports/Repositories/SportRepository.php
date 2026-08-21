@@ -18,7 +18,7 @@ final class SportRepository
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool, icon_asset_key?: string|null, icon_alt_text?: string|null, image_asset_key?: string|null, image_alt_text?: string|null}  $attributes
      */
     public function create(array $attributes): Sport
     {
@@ -29,7 +29,7 @@ final class SportRepository
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool, icon_asset_key?: string|null, icon_alt_text?: string|null, image_asset_key?: string|null, image_alt_text?: string|null}  $attributes
      */
     public function update(Sport $sport, array $attributes): Sport
     {

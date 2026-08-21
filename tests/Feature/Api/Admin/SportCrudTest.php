@@ -46,46 +46,65 @@ test('authorized admins can list, create, show, update, and delete sports', func
     getJson(route('api.v1.admin.sports.index'))
         ->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data', []);
+        ->assertJsonCount(5, 'data');
 
     $createResponse = postJson(route('api.v1.admin.sports.store'), [
-        'name' => 'Football',
-        'code' => 'football',
-        'description' => 'Association football supported for turf discovery and booking.',
+        'name' => 'Volleyball',
+        'code' => 'volleyball',
+        'description' => 'Indoor and outdoor volleyball court bookings.',
         'is_active' => false,
+        'icon_asset_key' => 'sports/icons/volleyball.png',
+        'icon_alt_text' => 'Volleyball sport icon',
+        'image_asset_key' => 'sports/images/volleyball.png',
+        'image_alt_text' => 'Volleyball sport image',
     ])
         ->assertCreated()
         ->assertHeader('Location')
         ->assertJsonPath('success', true)
         ->assertJsonPath('message', 'Sport created.')
-        ->assertJsonPath('data.name', 'Football')
-        ->assertJsonPath('data.code', 'football')
-        ->assertJsonPath('data.is_active', false);
+        ->assertJsonPath('data.name', 'Volleyball')
+        ->assertJsonPath('data.code', 'volleyball')
+        ->assertJsonPath('data.is_active', false)
+        ->assertJsonPath('data.icon_asset_key', 'sports/icons/volleyball.png')
+        ->assertJsonPath('data.image_asset_key', 'sports/images/volleyball.png');
 
     $sportId = $createResponse->json('data.id');
 
     getJson(route('api.v1.admin.sports.show', $sportId))
         ->assertOk()
-        ->assertJsonPath('data.description', 'Association football supported for turf discovery and booking.')
-        ->assertJsonPath('data.is_active', false);
+        ->assertJsonPath('data.description', 'Indoor and outdoor volleyball court bookings.')
+        ->assertJsonPath('data.is_active', false)
+        ->assertJsonPath('data.icon_alt_text', 'Volleyball sport icon')
+        ->assertJsonPath('data.image_alt_text', 'Volleyball sport image');
 
     putJson(route('api.v1.admin.sports.update', $sportId), [
-        'name' => 'Box Cricket',
-        'code' => 'box_cricket',
-        'description' => 'Compact-format cricket commonly played on turfs.',
+        'name' => 'Pickleball',
+        'code' => 'pickleball',
+        'description' => 'Pickleball court bookings.',
         'is_active' => true,
+        'icon_asset_key' => 'sports/icons/pickleball.png',
+        'icon_alt_text' => 'Pickleball sport icon',
+        'image_asset_key' => 'sports/images/pickleball.png',
+        'image_alt_text' => 'Pickleball sport image',
     ])
         ->assertOk()
         ->assertJsonPath('message', 'Sport updated.')
-        ->assertJsonPath('data.name', 'Box Cricket')
-        ->assertJsonPath('data.code', 'box_cricket')
-        ->assertJsonPath('data.is_active', true);
+        ->assertJsonPath('data.name', 'Pickleball')
+        ->assertJsonPath('data.code', 'pickleball')
+        ->assertJsonPath('data.is_active', true)
+        ->assertJsonPath('data.icon_asset_key', 'sports/icons/pickleball.png')
+        ->assertJsonPath('data.image_asset_key', 'sports/images/pickleball.png');
 
     getJson(route('api.v1.admin.sports.index'))
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.name', 'Box Cricket')
-        ->assertJsonPath('data.0.is_active', true);
+        ->assertJsonCount(6, 'data');
+
+    getJson(route('api.v1.admin.sports.show', $sportId))
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Pickleball')
+        ->assertJsonPath('data.is_active', true)
+        ->assertJsonPath('data.icon_alt_text', 'Pickleball sport icon')
+        ->assertJsonPath('data.image_alt_text', 'Pickleball sport image');
 
     deleteJson(route('api.v1.admin.sports.destroy', $sportId))
         ->assertNoContent();
@@ -98,11 +117,7 @@ test('admin sport create and update validate unique fields and supported code fo
     $user->roles()->attach(Role::query()->where('code', 'super_admin')->firstOrFail());
     $token = $user->createToken('admin-sports-super-admin');
 
-    $sport = Sport::query()->create([
-        'name' => 'Football',
-        'code' => 'football',
-        'description' => 'Association football.',
-    ]);
+    $sport = Sport::query()->where('code', 'football')->sole();
 
     withToken($token->plainTextToken);
 
@@ -111,15 +126,16 @@ test('admin sport create and update validate unique fields and supported code fo
         'code' => 'Football',
         'description' => 123,
         'is_active' => 'sometimes',
+        'icon_asset_key' => 99,
+        'icon_alt_text' => 99,
+        'image_asset_key' => 99,
+        'image_alt_text' => 99,
     ])
         ->assertUnprocessable()
         ->assertJsonPath('code', 'VALIDATION_ERROR')
-        ->assertJsonStructure(['errors' => ['name', 'code', 'description', 'is_active']]);
+        ->assertJsonStructure(['errors' => ['name', 'code', 'description', 'is_active', 'icon_asset_key', 'icon_alt_text', 'image_asset_key', 'image_alt_text']]);
 
-    $otherSport = Sport::query()->create([
-        'name' => 'Cricket',
-        'code' => 'cricket',
-    ]);
+    $otherSport = Sport::query()->where('code', 'cricket')->sole();
 
     putJson(route('api.v1.admin.sports.update', $otherSport), [
         'name' => 'Football',
