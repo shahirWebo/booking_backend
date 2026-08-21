@@ -10,6 +10,7 @@ it('registers product surface routes with dedicated URI and name prefixes', func
         'customer.home' => ['GET', 'customer', 'customer/Home'],
         'customer.profile.show' => ['GET', 'customer/profile', null],
         'vendor.home' => ['GET', 'vendor', 'vendor/Home'],
+        'vendor.login' => ['GET', 'vendor/login', null],
         'admin.home' => ['GET', 'admin', 'admin/Home'],
         'admin.sports.index' => ['GET', 'admin/operations/sports', null],
         'admin.sports.create' => ['GET', 'admin/operations/sports/create', null],
@@ -43,6 +44,7 @@ it('renders the public surface overview pages', function (string $routeName, str
     ['home', 'Welcome'],
     ['customer.home', 'customer/Home'],
     ['vendor.home', 'vendor/Home'],
+    ['vendor.login', 'auth/Login'],
     ['admin.home', 'admin/Home'],
     ['admin.login', 'auth/AdminLogin'],
 ]);

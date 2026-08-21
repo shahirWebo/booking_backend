@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AmenityManagementController;
 use App\Http\Controllers\Admin\SportManagementController;
 use App\Http\Controllers\Admin\SystemSettingManagementController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
+use App\Http\Controllers\Vendor\VendorOnboardingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,7 +30,19 @@ Route::middleware(['auth', 'active-user'])
 
 Route::prefix('vendor')->name('vendor.')->group(function () {
     Route::inertia('/', 'vendor/Home')->name('home');
+    Route::get('login', fn (Request $request) => Inertia::render('auth/Login', [
+        'canResetPassword' => Features::enabled(Features::resetPasswords()),
+        'status' => $request->session()->get('status'),
+        'intendedUrl' => route('vendor.onboarding.show'),
+    ]))->middleware('guest')->name('login');
 });
+
+Route::middleware(['auth', 'active-user'])
+    ->prefix('vendor')
+    ->name('vendor.')
+    ->group(function (): void {
+        Route::get('onboarding', [VendorOnboardingController::class, 'show'])->name('onboarding.show');
+    });
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::inertia('/', 'admin/Home')->name('home');
