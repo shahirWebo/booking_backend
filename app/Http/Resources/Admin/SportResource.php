@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 final class SportResource extends ApiResource
 {
     /**
-     * @return array<string, int|string|null>
+     * @return array<string, bool|int|string|null>
      */
     public function toArray(Request $request): array
     {
@@ -21,6 +21,7 @@ final class SportResource extends ApiResource
             'name' => $this->name,
             'code' => $this->code,
             'description' => $this->description,
+            'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

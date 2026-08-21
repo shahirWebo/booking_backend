@@ -10,6 +10,7 @@ test('sports table stores the display name and stable unique code', function () 
         'name',
         'code',
         'description',
+        'is_active',
         'created_at',
         'updated_at',
     ]))->toBeTrue();
@@ -18,6 +19,7 @@ test('sports table stores the display name and stable unique code', function () 
         'name' => 'Football',
         'code' => 'football',
         'description' => 'Association football supported for turf discovery and booking.',
+        'is_active' => false,
     ]);
 
     expect($sport)->toBeInstanceOf(Sport::class);
@@ -27,6 +29,16 @@ test('sports table stores the display name and stable unique code', function () 
     expect($sport->description)->toBe(
         'Association football supported for turf discovery and booking.',
     );
+    expect($sport->is_active)->toBeFalse();
+});
+
+test('sports default to active status when a status is not provided', function () {
+    $sport = Sport::query()->create([
+        'name' => 'Cricket',
+        'code' => 'cricket',
+    ]);
+
+    expect($sport->refresh()->is_active)->toBeTrue();
 });
 
 test('sports require unique display names and stable codes', function () {
