@@ -42,6 +42,8 @@ Route::middleware(['auth', 'active-user'])
     ->name('vendor.')
     ->group(function (): void {
         Route::get('onboarding', [VendorOnboardingController::class, 'show'])->name('onboarding.show');
+        Route::put('onboarding/{vendor}/business-details', [VendorOnboardingController::class, 'updateBusinessDetails'])
+            ->name('onboarding.business-details.update');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

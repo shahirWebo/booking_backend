@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Schema;
 uses(RefreshDatabase::class);
 
 test('vendor onboarding tables store versioned private evidence and lifecycle history', function () {
-    expect(Schema::hasColumns('vendors', ['submission_version']))->toBeTrue();
+    expect(Schema::hasColumns('vendors', [
+        'legal_name', 'display_name', 'legal_entity_type', 'submission_version',
+    ]))->toBeTrue();
     expect(Schema::hasColumns('vendor_documents', [
         'vendor_id', 'file_id', 'document_type', 'submission_version', 'status',
     ]))->toBeTrue();
