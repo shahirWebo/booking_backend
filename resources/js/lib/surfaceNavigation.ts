@@ -2,11 +2,11 @@ import {
     CalendarRange,
     CircleDollarSign,
     Compass,
-    Dribbble,
     Headphones,
     Home,
     MapPinned,
     ShieldCheck,
+    Trophy,
     Users,
 } from '@lucide/vue';
 import type { Auth } from '@/types/auth';
@@ -161,7 +161,7 @@ const surfaceNavigation: SurfaceNavigationMap = {
                     title: 'Sports',
                     mobileLabel: 'Sports',
                     href: '/admin/operations/sports',
-                    icon: Dribbble,
+                    icon: Trophy,
                     requiresAuth: true,
                     rolesAny: ['super_admin', 'admin_operations'],
                     permissionsAny: ['manage_sports'],
