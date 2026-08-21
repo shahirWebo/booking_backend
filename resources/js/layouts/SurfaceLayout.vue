@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowRight, Smartphone } from '@lucide/vue';
+import { ArrowRight, Smartphone } from '@lucide/vue';
 import { computed, onMounted, watch } from 'vue';
+import MobileAppBar from '@/components/mobile/MobileAppBar.vue';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import {
@@ -67,6 +69,16 @@ watch(
 onMounted(() => {
     initializeBrowserSession(auth.value);
 });
+
+const mobileNavItems = computed(() =>
+    bottomNavigation.value.map((item) => ({
+        active: isCurrentUrl(item.href),
+        href: item.href,
+        icon: item.icon,
+        key: item.key,
+        label: item.mobileLabel ?? item.title,
+    })),
+);
 </script>
 
 <template>
@@ -75,24 +87,14 @@ onMounted(() => {
     <div
         class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_transparent_36%),linear-gradient(180deg,_#f8fafc_0%,_#dbeafe_52%,_#f8fafc_100%)] text-slate-950"
     >
-        <div
-            class="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pt-5 pb-28 sm:px-6 sm:pb-10"
-        >
+        <div class="app-shell app-screen pb-28 sm:pb-10">
             <header
-                class="sticky top-0 z-20 -mx-4 mb-5 border-b border-white/70 bg-white/85 px-4 pt-3 pb-4 backdrop-blur sm:static sm:mx-0 sm:rounded-[2rem] sm:border sm:px-5 sm:pt-5"
+                class="sticky top-0 z-20 -mx-[var(--container-padding-mobile)] mb-5 border-b border-white/70 bg-white/85 px-[var(--container-padding-mobile)] pt-3 pb-4 backdrop-blur sm:static sm:mx-0 sm:rounded-[var(--radius-surface)] sm:border sm:px-5 sm:pt-5"
             >
-                <div class="flex items-center justify-between gap-3">
-                    <Link
-                        href="/"
-                        class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-                    >
-                        <ArrowLeft class="h-4 w-4" />
-                        All surfaces
-                    </Link>
-
+                <div class="flex items-start justify-between gap-3">
                     <Link
                         :href="entryHref"
-                        class="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+                        class="app-chip bg-slate-950 text-white shadow-sm transition hover:bg-slate-800"
                     >
                         {{ entryLabel }}
                         <ArrowRight class="h-4 w-4" />
@@ -100,33 +102,27 @@ onMounted(() => {
                 </div>
 
                 <div v-if="surface" class="mt-5 flex flex-col gap-4">
-                    <div
-                        class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+                    <MobileAppBar
+                        :title="surface.title"
+                        :subtitle="surface.summary"
+                        :eyebrow="surface.audience"
+                        leading-href="/"
+                        leading-label="All surfaces"
                     >
-                        <div class="space-y-2">
+                        <template #actions>
                             <div
-                                class="inline-flex w-fit items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold tracking-[0.24em] text-sky-900 uppercase"
+                                class="inline-flex min-h-[2rem] w-fit items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold tracking-[0.24em] text-sky-900 uppercase"
                             >
                                 <Smartphone class="h-4 w-4" />
                                 Native-like shell
                             </div>
-                            <div>
-                                <p
-                                    class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase"
-                                >
-                                    {{ surface.audience }}
-                                </p>
-                                <h1
-                                    class="text-3xl font-semibold tracking-tight sm:text-4xl"
-                                >
-                                    {{ surface.title }}
-                                </h1>
-                            </div>
-                        </div>
+                        </template>
+                    </MobileAppBar>
 
-                        <div
-                            class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 shadow-sm"
-                        >
+                    <div
+                        class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+                    >
+                        <div class="app-panel-muted text-sm text-slate-600">
                             <p class="font-semibold text-slate-900">
                                 Session continuity
                             </p>
@@ -141,7 +137,7 @@ onMounted(() => {
                             v-for="item in bottomNavigation"
                             :key="item.key"
                             :href="item.href"
-                            class="inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition"
+                            class="app-chip shrink-0 transition"
                             :class="
                                 isCurrentUrl(item.href)
                                     ? 'bg-slate-950 text-white shadow-sm'
@@ -161,24 +157,9 @@ onMounted(() => {
 
             <nav
                 v-if="bottomNavigation.length"
-                class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-18px_50px_-35px_rgba(15,23,42,0.6)] backdrop-blur sm:hidden"
+                class="fixed inset-x-0 bottom-0 z-30 sm:hidden"
             >
-                <div class="mx-auto grid max-w-md grid-cols-4 gap-2">
-                    <Link
-                        v-for="item in bottomNavigation"
-                        :key="`${item.key}-mobile`"
-                        :href="item.href"
-                        class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition"
-                        :class="
-                            isCurrentUrl(item.href)
-                                ? 'bg-slate-950 text-white'
-                                : 'text-slate-500 hover:bg-slate-100'
-                        "
-                    >
-                        <component :is="item.icon" class="h-4 w-4" />
-                        {{ item.mobileLabel ?? item.title }}
-                    </Link>
-                </div>
+                <MobileBottomNav :items="mobileNavItems" />
             </nav>
         </div>
 

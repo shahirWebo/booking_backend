@@ -28,21 +28,13 @@ const browserSessionTimestamp = computed(() =>
 
 <template>
     <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <section
-            class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-5 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.4)]"
-        >
-            <div class="flex flex-col gap-3">
-                <p
-                    class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase"
-                >
-                    Surface summary
-                </p>
-                <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <section class="app-panel overflow-hidden">
+            <div class="app-stack-sm">
+                <p class="app-eyebrow">Surface summary</p>
+                <h2 class="app-heading">
                     {{ surface.summary }}
                 </h2>
-                <p
-                    class="max-w-3xl text-sm leading-6 text-slate-600 sm:text-base"
-                >
+                <p class="app-copy max-w-3xl">
                     {{ surface.deliveryNote }}
                 </p>
             </div>
@@ -51,7 +43,7 @@ const browserSessionTimestamp = computed(() =>
                 <article
                     v-for="module in surface.modules"
                     :key="module.key"
-                    class="rounded-3xl border border-slate-200 bg-slate-50/90 p-4 shadow-sm"
+                    class="app-panel-muted"
                 >
                     <div class="flex items-start justify-between gap-3">
                         <div>
@@ -77,16 +69,14 @@ const browserSessionTimestamp = computed(() =>
             <section
                 v-for="section in navigationSections"
                 :key="section.key"
-                class="rounded-[2rem] border border-white/80 bg-white/90 p-5 shadow-[0_24px_70px_-50px_rgba(15,23,42,0.35)]"
+                class="app-panel"
             >
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <p
-                            class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase"
-                        >
+                        <p class="app-eyebrow">
                             {{ section.title }}
                         </p>
-                        <p class="mt-1 text-sm text-slate-600">
+                        <p class="app-copy-sm mt-1">
                             Role-aware entry points for the mobile shell.
                         </p>
                     </div>
@@ -100,7 +90,7 @@ const browserSessionTimestamp = computed(() =>
                         v-for="item in section.items"
                         :key="item.key"
                         :href="item.href"
-                        class="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 shadow-sm transition hover:bg-white"
+                        class="app-interactive-card rounded-3xl border border-slate-200 bg-slate-50 shadow-sm transition hover:bg-white"
                     >
                         <div class="flex items-start justify-between gap-3">
                             <div>
@@ -122,13 +112,9 @@ const browserSessionTimestamp = computed(() =>
             </section>
 
             <section
-                class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 text-slate-50 shadow-[0_28px_70px_-45px_rgba(15,23,42,0.7)]"
+                class="app-panel border-slate-200 bg-slate-950 text-slate-50"
             >
-                <p
-                    class="text-xs font-semibold tracking-[0.24em] text-sky-300 uppercase"
-                >
-                    Session restore
-                </p>
+                <p class="app-eyebrow text-sky-300">Session restore</p>
                 <p class="mt-3 text-sm leading-6 text-slate-200">
                     API token continuity now has a shared browser store. Later
                     OTP and mobile flows can persist the access token, reopen
@@ -155,7 +141,7 @@ const browserSessionTimestamp = computed(() =>
                 <Button
                     type="button"
                     variant="secondary"
-                    size="sm"
+                    size="default"
                     class="mt-4"
                     disabled
                 >

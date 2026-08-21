@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import FormFeedback from '@/components/feedback/FormFeedback.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -120,21 +121,21 @@ const submitRegisterForm = () =>
                 />
             </div>
 
-            <div
+            <FormFeedback
                 v-if="generalError"
-                class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                :message="generalError"
+                variant="error"
             >
-                <p>{{ generalError }}</p>
                 <Button
                     v-if="hasRetry"
                     type="button"
                     variant="link"
-                    class="mt-2 h-auto p-0 text-red-700"
+                    class="h-auto p-0 text-red-700"
                     @click="retry"
                 >
                     Try the last submission again
                 </Button>
-            </div>
+            </FormFeedback>
 
             <Button
                 type="submit"
