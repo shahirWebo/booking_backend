@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $primary_contact_name
  * @property string|null $primary_contact_email
  * @property string|null $primary_contact_mobile_number
+ * @property bool|null $is_gst_registered
+ * @property string|null $gstin
  * @property int $submission_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -31,6 +33,8 @@ use Illuminate\Support\Carbon;
     'primary_contact_name',
     'primary_contact_email',
     'primary_contact_mobile_number',
+    'is_gst_registered',
+    'gstin',
     'submission_version',
 ])]
 class Vendor extends Model
@@ -40,6 +44,7 @@ class Vendor extends Model
 
     protected $casts = [
         'status' => VendorStatus::class,
+        'is_gst_registered' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

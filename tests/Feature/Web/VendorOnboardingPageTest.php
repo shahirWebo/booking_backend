@@ -36,6 +36,8 @@ test('an authenticated user can start vendor onboarding and create a draft vendo
             ->where('vendor.primary_contact_name', null)
             ->where('vendor.primary_contact_email', null)
             ->where('vendor.primary_contact_mobile_number', null)
+            ->where('vendor.is_gst_registered', null)
+            ->where('vendor.gstin', null)
             ->where('vendor.submission_version', 1)
             ->where('owner.name', 'Riya Sharma')
             ->where('owner.mobile_number', '+919900001111')
@@ -283,4 +285,116 @@ test('vendor primary contact details cannot be edited after the draft state', fu
         ->assertSessionHasErrors('vendor');
 
     expect($vendor->fresh()->primary_contact_email)->toBeNull();
+});
+
+test('an active vendor owner can save registered GST details for a draft', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('vendor.onboarding.gst-details.update', $vendor), [
+            'is_gst_registered' => true,
+            'gstin' => '27aabcu9603r1zm',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'));
+
+    $this->assertDatabaseHas('vendors', [
+        'id' => $vendor->id,
+        'is_gst_registered' => true,
+        'gstin' => '27AABCU9603R1ZM',
+    ]);
+});
+
+test('a non-registered vendor cannot supply a GSTIN', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('vendor.onboarding.show'))
+        ->put(route('vendor.onboarding.gst-details.update', $vendor), [
+            'is_gst_registered' => false,
+            'gstin' => '27AABCU9603R1ZM',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'))
+        ->assertSessionHasErrors('gstin');
+});
+
+test('a registered vendor must provide a valid GSTIN', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('vendor.onboarding.show'))
+        ->put(route('vendor.onboarding.gst-details.update', $vendor), [
+            'is_gst_registered' => true,
+            'gstin' => 'invalid',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'))
+        ->assertSessionHasErrors('gstin');
+});
+
+test('a user cannot update another vendor GST details', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    $this->actingAs($user)
+        ->put(route('vendor.onboarding.gst-details.update', $vendor), [
+            'is_gst_registered' => true,
+            'gstin' => '27AABCU9603R1ZM',
+        ])
+        ->assertForbidden();
+});
+
+test('vendor GST details cannot be edited after the draft state', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->approved()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('vendor.onboarding.show'))
+        ->put(route('vendor.onboarding.gst-details.update', $vendor), [
+            'is_gst_registered' => true,
+            'gstin' => '27AABCU9603R1ZM',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'))
+        ->assertSessionHasErrors('vendor');
+
+    expect($vendor->fresh()->gstin)->toBeNull();
 });
