@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\SportController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use App\Http\Controllers\Api\V1\Auth\ShowCurrentUserController;
@@ -20,4 +21,11 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
         Route::get('user', ShowCurrentUserController::class)->middleware(['auth:sanctum', 'active-user'])->name('user.show');
         Route::delete('session', LogoutController::class)->middleware(['auth:sanctum', 'active-user'])->name('session.destroy');
     });
+
+    Route::middleware(['auth:sanctum', 'active-user', 'permission:manage_sports'])
+        ->prefix('admin')
+        ->as('admin.')
+        ->group(function (): void {
+            Route::apiResource('sports', SportController::class);
+        });
 });

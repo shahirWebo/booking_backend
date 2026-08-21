@@ -29,6 +29,10 @@ final class OpenApiDocument
                     'name' => 'Platform',
                     'description' => 'Platform-level API and liveness endpoints.',
                 ],
+                [
+                    'name' => 'Admin Sports',
+                    'description' => 'Administrative sport master-data management endpoints.',
+                ],
             ],
             'paths' => [
                 '/api/v1/auth/otp-requests' => [
@@ -146,6 +150,163 @@ final class OpenApiDocument
                         ],
                     ],
                 ],
+                '/api/v1/admin/sports' => [
+                    'get' => [
+                        'tags' => ['Admin Sports'],
+                        'operationId' => 'listAdminSports',
+                        'summary' => 'List sports for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The current sports master-data list.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SportCollectionResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'post' => [
+                        'tags' => ['Admin Sports'],
+                        'operationId' => 'createAdminSport',
+                        'summary' => 'Create a sport for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/SportInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '201' => [
+                                'description' => 'The sport was created.',
+                                'headers' => [
+                                    'Location' => [
+                                        'schema' => ['type' => 'string'],
+                                    ],
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SportResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
+                '/api/v1/admin/sports/{sport}' => [
+                    'get' => [
+                        'tags' => ['Admin Sports'],
+                        'operationId' => 'getAdminSport',
+                        'summary' => 'Get one sport for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'sport',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The requested sport.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SportResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'put' => [
+                        'tags' => ['Admin Sports'],
+                        'operationId' => 'updateAdminSport',
+                        'summary' => 'Update one sport for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'sport',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/SportInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The sport was updated.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/SportResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'delete' => [
+                        'tags' => ['Admin Sports'],
+                        'operationId' => 'deleteAdminSport',
+                        'summary' => 'Delete one sport for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'sport',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'responses' => [
+                            '204' => [
+                                'description' => 'The sport was deleted.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
                 '/api/v1' => [
                     'get' => [
                         'tags' => ['Platform'],
@@ -216,6 +377,40 @@ final class OpenApiDocument
                                     'success' => false,
                                     'code' => 'UNAUTHENTICATED',
                                     'message' => 'Authentication is required.',
+                                    'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'ForbiddenError' => [
+                        'description' => 'The authenticated user does not have permission to perform this action.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                'example' => [
+                                    'success' => false,
+                                    'code' => 'FORBIDDEN',
+                                    'message' => 'You do not have permission to perform this action.',
+                                    'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'ResourceNotFoundError' => [
+                        'description' => 'The requested resource was not found.',
+                        'headers' => [
+                            'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                        ],
+                        'content' => [
+                            'application/json' => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorResponse'],
+                                'example' => [
+                                    'success' => false,
+                                    'code' => 'RESOURCE_NOT_FOUND',
+                                    'message' => 'The requested resource was not found.',
                                     'meta' => ['request_id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV'],
                                 ],
                             ],
@@ -446,6 +641,49 @@ final class OpenApiDocument
                                     'email' => ['type' => ['string', 'null'], 'format' => 'email'],
                                     'status' => ['type' => 'string', 'const' => 'active'],
                                 ],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'Sport' => [
+                        'type' => 'object',
+                        'required' => ['id', 'name', 'code', 'description', 'created_at', 'updated_at'],
+                        'properties' => [
+                            'id' => ['type' => 'integer', 'minimum' => 1],
+                            'name' => ['type' => 'string', 'maxLength' => 255],
+                            'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
+                            'description' => ['type' => ['string', 'null']],
+                            'created_at' => ['type' => 'string', 'format' => 'date-time'],
+                            'updated_at' => ['type' => 'string', 'format' => 'date-time'],
+                        ],
+                    ],
+                    'SportInput' => [
+                        'type' => 'object',
+                        'required' => ['name', 'code'],
+                        'properties' => [
+                            'name' => ['type' => 'string', 'maxLength' => 255],
+                            'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
+                            'description' => ['type' => ['string', 'null']],
+                        ],
+                    ],
+                    'SportResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'message' => ['type' => 'string'],
+                            'data' => ['$ref' => '#/components/schemas/Sport'],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'SportCollectionResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'array',
+                                'items' => ['$ref' => '#/components/schemas/Sport'],
                             ],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],

@@ -27,6 +27,7 @@ test('database seeding creates the canonical permission catalog and least-privil
         'manage_refunds',
         'manage_roles_and_permissions',
         'manage_settlements',
+        'manage_sports',
         'manage_support_tickets',
         'manage_system_settings',
         'manage_turf_status',
@@ -135,7 +136,7 @@ test('permission seeding repairs canonical data and grants without changing cust
 
     $reloadedManagePricing = Permission::query()->findOrFail($managePricing->id);
 
-    expect(Permission::query()->count())->toBe(48)
+    expect(Permission::query()->count())->toBe(49)
         ->and($reloadedManagePricing->id)->toBe($managePricing->id)
         ->and($reloadedManagePricing->name)->toBe('Manage Pricing')
         ->and($reloadedManagePricing->description)->toBe('Manage turf pricing within the assigned vendor scope.')
