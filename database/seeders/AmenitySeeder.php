@@ -17,31 +17,37 @@ class AmenitySeeder extends Seeder
                 'name' => 'Parking',
                 'code' => 'parking',
                 'description' => 'Vehicle parking is available for players and visitors.',
+                'is_active' => true,
             ],
             [
                 'name' => 'Washroom',
                 'code' => 'washroom',
                 'description' => 'On-site restroom facilities are available.',
+                'is_active' => true,
             ],
             [
                 'name' => 'Changing Room',
                 'code' => 'changing_room',
                 'description' => 'Dedicated changing space is available before and after play.',
+                'is_active' => true,
             ],
             [
                 'name' => 'Shower',
                 'code' => 'shower',
                 'description' => 'Shower facilities are available on-site.',
+                'is_active' => true,
             ],
             [
                 'name' => 'Locker',
                 'code' => 'locker',
                 'description' => 'Secure lockers are available for personal belongings.',
+                'is_active' => true,
             ],
             [
                 'name' => 'Floodlights',
                 'code' => 'floodlights',
                 'description' => 'Floodlighting supports evening and low-light play.',
+                'is_active' => true,
             ],
         ];
 
@@ -51,6 +57,7 @@ class AmenitySeeder extends Seeder
                 [
                     'name' => $amenity['name'],
                     'description' => $amenity['description'],
+                    'is_active' => $amenity['is_active'],
                 ],
             );
         }

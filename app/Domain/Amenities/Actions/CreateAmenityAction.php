@@ -12,7 +12,7 @@ final class CreateAmenityAction
     ) {}
 
     /**
-     * @param  array{name: string, code: string, description?: string|null}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
      */
     public function execute(array $attributes): Amenity
     {
