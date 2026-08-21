@@ -16,6 +16,9 @@ use Illuminate\Support\Carbon;
  * @property string|null $legal_name
  * @property string|null $display_name
  * @property string|null $legal_entity_type
+ * @property string|null $primary_contact_name
+ * @property string|null $primary_contact_email
+ * @property string|null $primary_contact_mobile_number
  * @property int $submission_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -25,6 +28,9 @@ use Illuminate\Support\Carbon;
     'legal_name',
     'display_name',
     'legal_entity_type',
+    'primary_contact_name',
+    'primary_contact_email',
+    'primary_contact_mobile_number',
     'submission_version',
 ])]
 class Vendor extends Model
