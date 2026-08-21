@@ -17,6 +17,7 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::inertia('/', 'admin/Home')->name('home');
+    Route::inertia('operations/sports', 'admin/Sports')->name('sports.index');
     Route::get('login', fn (Request $request) => Inertia::render('auth/AdminLogin', [
         'canResetPassword' => Features::enabled(Features::resetPasswords()),
         'status' => $request->session()->get('status'),

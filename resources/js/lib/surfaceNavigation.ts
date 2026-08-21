@@ -2,6 +2,7 @@ import {
     CalendarRange,
     CircleDollarSign,
     Compass,
+    Dribbble,
     Headphones,
     Home,
     MapPinned,
@@ -154,6 +155,19 @@ const surfaceNavigation: SurfaceNavigationMap = {
                     matchPrefixes: ['/admin/operations'],
                     summary:
                         'Review vendors, locations, turfs, and booking anomalies.',
+                },
+                {
+                    key: 'admin-sports',
+                    title: 'Sports',
+                    mobileLabel: 'Sports',
+                    href: '/admin/operations/sports',
+                    icon: Dribbble,
+                    requiresAuth: true,
+                    rolesAny: ['super_admin', 'admin_operations'],
+                    permissionsAny: ['manage_sports'],
+                    matchPrefixes: ['/admin/operations/sports'],
+                    summary:
+                        'Manage the shared sports catalog used across discovery and vendor operations.',
                 },
                 {
                     key: 'admin-finance',
