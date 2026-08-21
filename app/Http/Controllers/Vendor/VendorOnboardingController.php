@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Domain\Vendors\Actions\StartVendorOnboardingAction;
 use App\Domain\Vendors\Actions\UpdateVendorBusinessDetailsAction;
+use App\Domain\Vendors\Actions\UpdateVendorPrimaryContactAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\UpdateVendorBusinessDetailsRequest;
+use App\Http\Requests\Vendor\UpdateVendorPrimaryContactRequest;
 use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ final class VendorOnboardingController extends Controller
     public function __construct(
         private readonly StartVendorOnboardingAction $startVendorOnboarding,
         private readonly UpdateVendorBusinessDetailsAction $updateVendorBusinessDetails,
+        private readonly UpdateVendorPrimaryContactAction $updateVendorPrimaryContact,
     ) {}
 
     public function show(Request $request): InertiaResponse
@@ -30,6 +33,9 @@ final class VendorOnboardingController extends Controller
                 'legal_name' => $vendor->legal_name,
                 'display_name' => $vendor->display_name,
                 'legal_entity_type' => $vendor->legal_entity_type,
+                'primary_contact_name' => $vendor->primary_contact_name,
+                'primary_contact_email' => $vendor->primary_contact_email,
+                'primary_contact_mobile_number' => $vendor->primary_contact_mobile_number,
                 'submission_version' => $vendor->submission_version,
             ],
             'owner' => [
@@ -43,6 +49,13 @@ final class VendorOnboardingController extends Controller
     public function updateBusinessDetails(UpdateVendorBusinessDetailsRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->updateVendorBusinessDetails->execute($vendor, $request->businessDetails());
+
+        return to_route('vendor.onboarding.show');
+    }
+
+    public function updatePrimaryContact(UpdateVendorPrimaryContactRequest $request, Vendor $vendor): RedirectResponse
+    {
+        $this->updateVendorPrimaryContact->execute($vendor, $request->primaryContact());
 
         return to_route('vendor.onboarding.show');
     }

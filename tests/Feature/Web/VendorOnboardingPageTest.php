@@ -33,6 +33,9 @@ test('an authenticated user can start vendor onboarding and create a draft vendo
             ->where('vendor.legal_name', null)
             ->where('vendor.display_name', null)
             ->where('vendor.legal_entity_type', null)
+            ->where('vendor.primary_contact_name', null)
+            ->where('vendor.primary_contact_email', null)
+            ->where('vendor.primary_contact_mobile_number', null)
             ->where('vendor.submission_version', 1)
             ->where('owner.name', 'Riya Sharma')
             ->where('owner.mobile_number', '+919900001111')
@@ -183,4 +186,101 @@ test('vendor business details cannot be edited after the draft state', function 
         ->assertSessionHasErrors('vendor');
 
     expect($vendor->fresh()->legal_name)->toBeNull();
+});
+
+test('an active vendor owner can save primary contact details for a draft', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->put(route('vendor.onboarding.primary-contact.update', $vendor), [
+            'primary_contact_name' => '  Riya Sharma  ',
+            'primary_contact_email' => '  RIYA@EXAMPLE.TEST  ',
+            'primary_contact_mobile_number' => '+919900001111',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'));
+
+    $this->assertDatabaseHas('vendors', [
+        'id' => $vendor->id,
+        'primary_contact_name' => 'Riya Sharma',
+        'primary_contact_email' => 'riya@example.test',
+        'primary_contact_mobile_number' => '+919900001111',
+    ]);
+});
+
+test('vendor primary contact details require a valid email and E.164 mobile number', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('vendor.onboarding.show'))
+        ->put(route('vendor.onboarding.primary-contact.update', $vendor), [
+            'primary_contact_name' => 'Riya Sharma',
+            'primary_contact_email' => 'not-an-email',
+            'primary_contact_mobile_number' => '9900001111',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'))
+        ->assertSessionHasErrors([
+            'primary_contact_email',
+            'primary_contact_mobile_number',
+        ]);
+});
+
+test('a user cannot update another vendor primary contact', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->create();
+
+    $this->actingAs($user)
+        ->put(route('vendor.onboarding.primary-contact.update', $vendor), [
+            'primary_contact_name' => 'Riya Sharma',
+            'primary_contact_email' => 'riya@example.test',
+            'primary_contact_mobile_number' => '+919900001111',
+        ])
+        ->assertForbidden();
+});
+
+test('vendor primary contact details cannot be edited after the draft state', function (): void {
+    $user = User::factory()->create([
+        'status' => UserStatus::Active,
+    ]);
+    $vendor = Vendor::factory()->approved()->create();
+
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $user->id,
+        'role' => 'vendor_owner',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($user)
+        ->from(route('vendor.onboarding.show'))
+        ->put(route('vendor.onboarding.primary-contact.update', $vendor), [
+            'primary_contact_name' => 'Riya Sharma',
+            'primary_contact_email' => 'riya@example.test',
+            'primary_contact_mobile_number' => '+919900001111',
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'))
+        ->assertSessionHasErrors('vendor');
+
+    expect($vendor->fresh()->primary_contact_email)->toBeNull();
 });
