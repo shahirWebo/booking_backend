@@ -13,11 +13,20 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property VendorStatus $status
+ * @property string|null $legal_name
+ * @property string|null $display_name
+ * @property string|null $legal_entity_type
  * @property int $submission_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['status', 'submission_version'])]
+#[Fillable([
+    'status',
+    'legal_name',
+    'display_name',
+    'legal_entity_type',
+    'submission_version',
+])]
 class Vendor extends Model
 {
     /** @use HasFactory<VendorFactory> */
