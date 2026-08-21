@@ -33,8 +33,33 @@ final class OpenApiDocument
                     'name' => 'Admin Sports',
                     'description' => 'Administrative sport master-data management endpoints.',
                 ],
+                [
+                    'name' => 'Sports',
+                    'description' => 'Public sport discovery endpoints.',
+                ],
             ],
             'paths' => [
+                '/api/v1/sports' => [
+                    'get' => [
+                        'tags' => ['Sports'],
+                        'operationId' => 'listSports',
+                        'summary' => 'List active sports for public discovery.',
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The active public sports list ordered by name.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/PublicSportCollectionResponse'],
+                                    ],
+                                ],
+                            ],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
                 '/api/v1/auth/otp-requests' => [
                     'post' => [
                         'tags' => ['Authentication'],
@@ -694,6 +719,32 @@ final class OpenApiDocument
                             'data' => [
                                 'type' => 'array',
                                 'items' => ['$ref' => '#/components/schemas/Sport'],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'PublicSport' => [
+                        'type' => 'object',
+                        'required' => ['id', 'name', 'code', 'description', 'icon_asset_key', 'icon_alt_text', 'image_asset_key', 'image_alt_text'],
+                        'properties' => [
+                            'id' => ['type' => 'integer', 'minimum' => 1],
+                            'name' => ['type' => 'string', 'maxLength' => 255],
+                            'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
+                            'description' => ['type' => ['string', 'null']],
+                            'icon_asset_key' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                            'icon_alt_text' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                            'image_asset_key' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                            'image_alt_text' => ['type' => ['string', 'null'], 'maxLength' => 255],
+                        ],
+                    ],
+                    'PublicSportCollectionResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'array',
+                                'items' => ['$ref' => '#/components/schemas/PublicSport'],
                             ],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],

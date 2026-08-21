@@ -18,6 +18,17 @@ final class SportRepository
     }
 
     /**
+     * @return Collection<int, Sport>
+     */
+    public function allActiveOrdered(): Collection
+    {
+        return Sport::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
      * @param  array{name: string, code: string, description?: string|null, is_active?: bool, icon_asset_key?: string|null, icon_alt_text?: string|null, image_asset_key?: string|null, image_alt_text?: string|null}  $attributes
      */
     public function create(array $attributes): Sport
