@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -9,6 +9,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    submitInertiaForm,
+    useFormSubmission,
+} from '@/composables/useFormSubmission';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -24,6 +28,26 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
 }>();
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const { errorFor, generalError, hasRetry, processing, retry, submit } =
+    useFormSubmission();
+
+const submitLoginForm = () =>
+    submit(
+        () =>
+            submitInertiaForm(form, store(), {
+                resetOnSuccess: ['password'],
+            }),
+        {
+            errorMessage: 'Unable to log in right now.',
+        },
+    );
 </script>
 
 <template>
@@ -38,12 +62,7 @@ defineProps<{
 
     <PasskeyVerify />
 
-    <Form
-        v-bind="store.form()"
-        :reset-on-success="['password']"
-        v-slot="{ errors, processing }"
-        class="flex flex-col gap-6"
-    >
+    <form class="flex flex-col gap-6" @submit.prevent="submitLoginForm">
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="email">Email address</Label>
@@ -56,8 +75,9 @@ defineProps<{
                     :tabindex="1"
                     autocomplete="email"
                     placeholder="email@example.com"
+                    v-model="form.email"
                 />
-                <InputError :message="errors.email" />
+                <InputError :message="errorFor('email') ?? form.errors.email" />
             </div>
 
             <div class="grid gap-2">
@@ -79,15 +99,39 @@ defineProps<{
                     :tabindex="2"
                     autocomplete="current-password"
                     placeholder="Password"
+                    v-model="form.password"
                 />
-                <InputError :message="errors.password" />
+                <InputError
+                    :message="errorFor('password') ?? form.errors.password"
+                />
             </div>
 
             <div class="flex items-center justify-between">
                 <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" :tabindex="3" />
+                    <Checkbox
+                        id="remember"
+                        name="remember"
+                        :tabindex="3"
+                        v-model="form.remember"
+                    />
                     <span>Remember me</span>
                 </Label>
+            </div>
+
+            <div
+                v-if="generalError"
+                class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+                <p>{{ generalError }}</p>
+                <Button
+                    v-if="hasRetry"
+                    type="button"
+                    variant="link"
+                    class="mt-2 h-auto p-0 text-red-700"
+                    @click="retry"
+                >
+                    Try the last submission again
+                </Button>
             </div>
 
             <Button
@@ -106,5 +150,5 @@ defineProps<{
             Don't have an account?
             <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
         </div>
-    </Form>
+    </form>
 </template>

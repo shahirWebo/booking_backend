@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -7,6 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    submitInertiaForm,
+    useFormSubmission,
+} from '@/composables/useFormSubmission';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
@@ -20,17 +24,33 @@ defineOptions({
         description: 'Enter your details below to create your account',
     },
 });
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+});
+
+const { errorFor, generalError, hasRetry, processing, retry, submit } =
+    useFormSubmission();
+
+const submitRegisterForm = () =>
+    submit(
+        () =>
+            submitInertiaForm(form, store(), {
+                resetOnSuccess: ['password', 'password_confirmation'],
+            }),
+        {
+            errorMessage: 'Unable to create your account right now.',
+        },
+    );
 </script>
 
 <template>
     <Head title="Register" />
 
-    <Form
-        v-bind="store.form()"
-        :reset-on-success="['password', 'password_confirmation']"
-        v-slot="{ errors, processing }"
-        class="flex flex-col gap-6"
-    >
+    <form class="flex flex-col gap-6" @submit.prevent="submitRegisterForm">
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
@@ -43,8 +63,9 @@ defineOptions({
                     autocomplete="name"
                     name="name"
                     placeholder="Full name"
+                    v-model="form.name"
                 />
-                <InputError :message="errors.name" />
+                <InputError :message="errorFor('name') ?? form.errors.name" />
             </div>
 
             <div class="grid gap-2">
@@ -57,8 +78,9 @@ defineOptions({
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
+                    v-model="form.email"
                 />
-                <InputError :message="errors.email" />
+                <InputError :message="errorFor('email') ?? form.errors.email" />
             </div>
 
             <div class="grid gap-2">
@@ -71,8 +93,11 @@ defineOptions({
                     name="password"
                     placeholder="Password"
                     :passwordrules="passwordRules"
+                    v-model="form.password"
                 />
-                <InputError :message="errors.password" />
+                <InputError
+                    :message="errorFor('password') ?? form.errors.password"
+                />
             </div>
 
             <div class="grid gap-2">
@@ -85,8 +110,30 @@ defineOptions({
                     name="password_confirmation"
                     placeholder="Confirm password"
                     :passwordrules="passwordRules"
+                    v-model="form.password_confirmation"
                 />
-                <InputError :message="errors.password_confirmation" />
+                <InputError
+                    :message="
+                        errorFor('password_confirmation') ??
+                        form.errors.password_confirmation
+                    "
+                />
+            </div>
+
+            <div
+                v-if="generalError"
+                class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+                <p>{{ generalError }}</p>
+                <Button
+                    v-if="hasRetry"
+                    type="button"
+                    variant="link"
+                    class="mt-2 h-auto p-0 text-red-700"
+                    @click="retry"
+                >
+                    Try the last submission again
+                </Button>
             </div>
 
             <Button
@@ -110,5 +157,5 @@ defineOptions({
                 >Log in</TextLink
             >
         </div>
-    </Form>
+    </form>
 </template>

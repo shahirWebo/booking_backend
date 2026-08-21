@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,13 +37,93 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'roles' => fn (): array => $this->resolveRoleCodes($user),
+                'permissions' => fn (): array => $this->resolvePermissionCodes($user),
+                'preferredSurface' => fn (): ?string => $this->resolvePreferredSurface($user),
+                'sessionMode' => $user ? 'cookie' : 'guest',
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolveRoleCodes(?User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        return $user->roles()
+            ->orderBy('roles.code')
+            ->pluck('roles.code')
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function resolvePermissionCodes(?User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        return Role::query()
+            ->select('permissions.code')
+            ->join('user_roles', 'roles.id', '=', 'user_roles.role_id')
+            ->join('role_permissions', 'roles.id', '=', 'role_permissions.role_id')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('user_roles.user_id', $user->getKey())
+            ->distinct()
+            ->orderBy('permissions.code')
+            ->pluck('permissions.code')
+            ->all();
+    }
+
+    private function resolvePreferredSurface(?User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $roleCodes = $this->resolveRoleCodes($user);
+
+        if ($this->containsRolePrefix($roleCodes, 'super_admin')
+            || $this->containsRolePrefix($roleCodes, 'admin_')) {
+            return 'admin';
+        }
+
+        if ($this->containsRolePrefix($roleCodes, 'vendor_')) {
+            return 'vendor';
+        }
+
+        if (in_array('customer', $roleCodes, true)) {
+            return 'customer';
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<int, string>  $roleCodes
+     */
+    private function containsRolePrefix(array $roleCodes, string $prefix): bool
+    {
+        foreach ($roleCodes as $roleCode) {
+            if (str_starts_with($roleCode, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -11,7 +11,11 @@ export type User = {
 };
 
 export type Auth = {
-    user: User;
+    user: User | null;
+    roles: string[];
+    permissions: string[];
+    preferredSurface: 'customer' | 'vendor' | 'admin' | null;
+    sessionMode: 'guest' | 'cookie' | 'token';
 };
 
 export type Passkey = {
@@ -27,3 +31,5 @@ export type TwoFactorConfigContent = {
     description: string;
     buttonText: string;
 };
+
+export type BrowserSessionPersistence = 'memory' | 'session' | 'local';
