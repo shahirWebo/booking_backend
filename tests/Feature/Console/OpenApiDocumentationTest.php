@@ -35,6 +35,8 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
         ->and($document['paths']['/api/v1/admin/amenities/{amenity}']['get']['operationId'])->toBe('getAdminAmenity')
         ->and($document['paths']['/api/v1/admin/amenities/{amenity}']['put']['responses'])->toHaveKeys(['200', '401', '403', '404', '422', '429'])
         ->and($document['paths']['/api/v1/admin/amenities/{amenity}']['delete']['responses'])->toHaveKeys(['204', '401', '403', '404', '429'])
+        ->and($document['paths']['/api/v1/admin/system-settings']['get']['operationId'])->toBe('getAdminSystemSettings')
+        ->and($document['paths']['/api/v1/admin/system-settings']['put']['responses'])->toHaveKeys(['200', '401', '403', '422', '429'])
         ->and($document['paths']['/api/v1']['get']['operationId'])->toBe('getApiV1Root')
         ->and($document['paths']['/api/v1']['get']['responses'])->toHaveKeys(['204', '429'])
         ->and($document['paths']['/health']['get']['operationId'])->toBe('getHealth')
@@ -50,6 +52,9 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
             'SportInput',
             'SportResponse',
             'SportCollectionResponse',
+            'SystemSettings',
+            'SystemSettingsInput',
+            'SystemSettingsResponse',
             'PublicSport',
             'PublicSportCollectionResponse',
             'HealthStatus',

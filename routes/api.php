@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\AmenityController;
 use App\Http\Controllers\Api\V1\Admin\SportController;
+use App\Http\Controllers\Api\V1\Admin\SystemSettingController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use App\Http\Controllers\Api\V1\Auth\ShowCurrentUserController;
@@ -37,5 +38,13 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
         ->as('admin.')
         ->group(function (): void {
             Route::apiResource('amenities', AmenityController::class);
+        });
+
+    Route::middleware(['auth:sanctum', 'active-user', 'permission:manage_system_settings'])
+        ->prefix('admin')
+        ->as('admin.')
+        ->group(function (): void {
+            Route::get('system-settings', [SystemSettingController::class, 'show'])->name('system_settings.show');
+            Route::put('system-settings', [SystemSettingController::class, 'update'])->name('system_settings.update');
         });
 });

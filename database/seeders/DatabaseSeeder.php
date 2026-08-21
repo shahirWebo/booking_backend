@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             SportSeeder::class,
             AmenitySeeder::class,
+            SystemSettingSeeder::class,
         ]);
     }
 }
