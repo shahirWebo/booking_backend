@@ -52,10 +52,14 @@ export function createAuthApiService(
                 '/auth/otp-requests',
                 payload,
             ),
-        verifyOtp: (payload: OtpVerificationPayload) =>
+        verifyOtp: (
+            payload: OtpVerificationPayload,
+            options?: { headers?: HeadersInit },
+        ) =>
             publicClient.post<OtpVerificationResponse, OtpVerificationPayload>(
                 '/auth/otp-verifications',
                 payload,
+                options,
             ),
     };
 }

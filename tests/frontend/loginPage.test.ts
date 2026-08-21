@@ -63,6 +63,7 @@ describe('LoginPage', () => {
         vi.setSystemTime(new Date('2026-08-21T10:00:00Z'));
         vi.mocked(usePage).mockReturnValue({
             props: {
+                intendedUrl: null,
                 auth: {
                     user: null,
                     roles: [],
@@ -149,6 +150,7 @@ describe('LoginPage', () => {
         const wrapper = mount(LoginPage, {
             props: {
                 canResetPassword: false,
+                intendedUrl: '/customer/profile',
             },
             global: {
                 stubs: loginPageStubs,
@@ -165,6 +167,10 @@ describe('LoginPage', () => {
         expect(authApiMocks.verifyOtp).toHaveBeenCalledWith({
             otp_request_id: '01K31JY2R4D9V9G4QJVNT8ET9X',
             code: '123456',
+        }, {
+            headers: {
+                'X-Client-Mode': 'web',
+            },
         });
         expect(
             browserSessionMocks.persistBrowserTokenSession,
@@ -181,7 +187,7 @@ describe('LoginPage', () => {
                 }),
             }),
         );
-        expect(replaceMock).toHaveBeenCalledWith('/customer');
+        expect(replaceMock).toHaveBeenCalledWith('/customer/profile');
         wrapper.unmount();
     });
 
@@ -212,6 +218,7 @@ describe('LoginPage', () => {
         const wrapper = mount(LoginPage, {
             props: {
                 canResetPassword: false,
+                intendedUrl: '/customer/profile',
             },
             global: {
                 stubs: loginPageStubs,
@@ -221,7 +228,7 @@ describe('LoginPage', () => {
         await flushPromises();
 
         expect(browserSessionMocks.initializeBrowserSession).toHaveBeenCalled();
-        expect(replaceMock).toHaveBeenCalledWith('/customer');
+        expect(replaceMock).toHaveBeenCalledWith('/customer/profile');
         wrapper.unmount();
     });
 

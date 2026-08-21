@@ -18,10 +18,11 @@ afterEach(function (): void {
 test('a valid OTP creates a mobile user and issues a bearer token', function () {
     $issued = app(IssueOtpChallengeAction::class)->execute('+919876543210', OtpRequestPurpose::Authentication);
 
-    $this->postJson(route('api.v1.auth.otp_verifications.store'), [
-        'otp_request_id' => $issued['challenge']->id,
-        'code' => $issued['code'],
-    ])
+    $this->withHeaders(['X-Client-Mode' => 'web'])
+        ->postJson(route('api.v1.auth.otp_verifications.store'), [
+            'otp_request_id' => $issued['challenge']->id,
+            'code' => $issued['code'],
+        ])
         ->assertOk()
         ->assertHeader('Cache-Control', 'no-store, private')
         ->assertJsonPath('success', true)
@@ -29,6 +30,8 @@ test('a valid OTP creates a mobile user and issues a bearer token', function () 
         ->assertJsonPath('data.access_token', fn (string $token): bool => $token !== '')
         ->assertJsonMissingPath('data.otp_request_id')
         ->assertJsonMissingPath('data.code');
+
+    expect($this->app['auth']->guard('web')->check())->toBeTrue();
 
     expect(User::query()->where('mobile_number', '+919876543210')->count())->toBe(1)
         ->and($issued['challenge']->fresh()->status)->toBe(OtpRequestStatus::Verified)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CustomerProfile;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $user,
+                'user' => $this->resolveUserPayload($user),
                 'roles' => fn (): array => $this->resolveRoleCodes($user),
                 'permissions' => fn (): array => $this->resolvePermissionCodes($user),
                 'preferredSurface' => fn (): ?string => $this->resolvePreferredSurface($user),
@@ -111,6 +112,32 @@ class HandleInertiaRequests extends Middleware
         }
 
         return null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveUserPayload(?User $user): ?array
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        /** @var CustomerProfile|null $profile */
+        $profile = $user->relationLoaded('customerProfile')
+            ? $user->customerProfile
+            : $user->customerProfile()->first();
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'mobile_number' => $user->mobile_number,
+            'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+            'avatar' => $profile?->profileImageUrl(),
+            'created_at' => $user->created_at?->toIso8601String(),
+            'updated_at' => $user->updated_at?->toIso8601String(),
+        ];
     }
 
     /**

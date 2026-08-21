@@ -20,7 +20,12 @@ Route::middleware(['auth', 'active-user'])
     ->name('customer.')
     ->group(function (): void {
         Route::get('profile', [CustomerProfileController::class, 'show'])->name('profile.show');
+        Route::put('profile', [CustomerProfileController::class, 'update'])->name('profile.update');
+        Route::post('profile/deletion-request', [CustomerProfileController::class, 'requestDeletion'])->name('profile.deletion-request');
     });
+
+Route::middleware(['auth', 'active-user'])
+    ->get('profile', fn () => to_route('customer.profile.show'));
 
 Route::prefix('vendor')->name('vendor.')->group(function () {
     Route::inertia('/', 'vendor/Home')->name('home');

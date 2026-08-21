@@ -140,54 +140,7 @@ const mobileNavItems = computed(() =>
                     </Button>
                 </div>
 
-                <div v-if="surface" class="mt-5 flex flex-col gap-4">
-                    <MobileAppBar
-                        :title="surface.title"
-                        :subtitle="surface.summary"
-                        :eyebrow="surface.audience"
-                        leading-href="/"
-                        leading-label="All surfaces"
-                    >
-                        <template #actions>
-                            <div
-                                class="inline-flex min-h-[2rem] w-fit items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold tracking-[0.24em] text-sky-900 uppercase"
-                            >
-                                <Smartphone class="h-4 w-4" />
-                                Native-like shell
-                            </div>
-                        </template>
-                    </MobileAppBar>
-
-                    <div
-                        class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-                    >
-                        <div class="app-panel-muted text-sm text-slate-600">
-                            <p class="font-semibold text-slate-900">
-                                Session continuity
-                            </p>
-                            <p class="mt-1 leading-6">
-                                {{ sessionLabel }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 overflow-x-auto pb-1">
-                        <Link
-                            v-for="item in bottomNavigation"
-                            :key="item.key"
-                            :href="item.href"
-                            class="app-chip shrink-0 transition"
-                            :class="
-                                isCurrentUrl(item.href)
-                                    ? 'bg-slate-950 text-white shadow-sm'
-                                    : 'border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50'
-                            "
-                        >
-                            <component :is="item.icon" class="h-4 w-4" />
-                            {{ item.title }}
-                        </Link>
-                    </div>
-                </div>
+                
             </header>
 
             <main class="flex-1">

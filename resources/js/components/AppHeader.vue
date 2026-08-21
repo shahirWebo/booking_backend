@@ -244,13 +244,19 @@ const rightNavItems: NavItem[] = [
                                     <AvatarImage
                                         v-if="authenticatedUser.avatar"
                                         :src="authenticatedUser.avatar"
-                                        :alt="authenticatedUser.name"
+                                        :alt="
+                                            authenticatedUser.name ??
+                                            'User avatar'
+                                        "
                                     />
                                     <AvatarFallback
                                         class="rounded-lg bg-neutral-200 font-semibold text-black dark:bg-neutral-700 dark:text-white"
                                     >
                                         {{
-                                            getInitials(authenticatedUser.name)
+                                            getInitials(
+                                                authenticatedUser.name ??
+                                                    undefined,
+                                            )
                                         }}
                                     </AvatarFallback>
                                 </Avatar>

@@ -28,9 +28,10 @@ import type { Auth, User } from '@/types/auth';
 const page = usePage();
 const browserSession = getBrowserSessionState();
 
-defineProps<{
+const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
+    intendedUrl?: string | null;
 }>();
 
 type AuthStep = 'request' | 'verify';
@@ -55,9 +56,10 @@ const effectiveAuth = computed(() =>
     resolveBrowserSessionAuth(page.props.auth),
 );
 const authenticatedDestination = computed(() =>
-    effectiveAuth.value.preferredSurface
+    props.intendedUrl ??
+    (effectiveAuth.value.preferredSurface
         ? `/${effectiveAuth.value.preferredSurface}`
-        : '/customer',
+        : '/customer'),
 );
 
 const normalizedCode = computed(() =>
@@ -240,6 +242,10 @@ async function verifyOtp(): Promise<void> {
         const verification = await authApiService.verifyOtp({
             otp_request_id: otpRequestId.value,
             code: normalizedCode.value,
+        }, {
+            headers: {
+                'X-Client-Mode': 'web',
+            },
         });
 
         persistBrowserTokenSession({
@@ -262,7 +268,7 @@ async function verifyOtp(): Promise<void> {
             persistence: rememberMe.value ? 'local' : 'session',
         });
 
-        window.location.replace('/customer');
+        window.location.replace(authenticatedDestination.value);
     } catch (error) {
         clearBrowserSession();
 

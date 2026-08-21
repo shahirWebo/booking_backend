@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\VerifyOtpRequest;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 final class VerifyOtpController extends Controller
@@ -24,6 +25,12 @@ final class VerifyOtpController extends Controller
         } catch (OtpInvalidOrExpiredException|OtpAttemptsExceededException) {
             // Keep challenge lifecycle outcomes indistinguishable to callers.
             throw new UnprocessableEntityHttpException('The OTP is invalid or expired.');
+        }
+
+        if ($request->header('X-Client-Mode') === 'web') {
+            // Browser OTP login also needs the Laravel session for Inertia routes.
+            Auth::guard('web')->login($authenticated['user']);
+            $request->session()->regenerate();
         }
 
         return ApiResponse::success(

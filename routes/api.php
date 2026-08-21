@@ -22,7 +22,9 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
 
     Route::prefix('auth')->as('auth.')->group(function (): void {
         Route::post('otp-requests', RequestOtpController::class)->name('otp_requests.store');
-        Route::post('otp-verifications', VerifyOtpController::class)->name('otp_verifications.store');
+        Route::post('otp-verifications', VerifyOtpController::class)
+            ->middleware('web')
+            ->name('otp_verifications.store');
         Route::get('user', ShowCurrentUserController::class)->middleware(['auth:sanctum', 'active-user'])->name('user.show');
         Route::delete('session', LogoutController::class)->middleware(['auth:sanctum', 'active-user'])->name('session.destroy');
     });
