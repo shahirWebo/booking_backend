@@ -8,15 +8,25 @@ use App\Models\CustomerProfile;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 final class CustomerProfileController extends Controller
 {
-    public function show(Request $request): JsonResponse
+    public function show(Request $request): JsonResponse|InertiaResponse
     {
         $profile = CustomerProfile::query()->firstOrCreate([
             'user_id' => $request->user()->id,
         ])->load('user');
 
-        return ApiResponse::success(new CustomerProfileResource($profile));
+        $resource = new CustomerProfileResource($profile);
+
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return ApiResponse::success($resource);
+        }
+
+        return Inertia::render('customer/Profile', [
+            'profile' => $resource->resolve($request),
+        ]);
     }
 }

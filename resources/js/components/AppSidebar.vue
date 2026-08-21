@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookOpen,
+    Cog,
+    FolderGit2,
+    LayoutGrid,
+    MapPinned,
+    Trophy,
+} from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -15,15 +23,48 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import admin from '@/routes/admin';
 import type { NavItem } from '@/types';
+import type { Auth } from '@/types/auth';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
+const page = usePage();
+const auth = computed(() => page.props.auth as Auth);
+
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+    ];
+
+    if (auth.value.permissions.includes('manage_sports')) {
+        items.push({
+            title: 'Sports',
+            href: admin.sports.index(),
+            icon: Trophy,
+        });
+    }
+
+    if (auth.value.permissions.includes('manage_amenities')) {
+        items.push({
+            title: 'Amenities',
+            href: admin.amenities.index(),
+            icon: MapPinned,
+        });
+    }
+
+    if (auth.value.permissions.includes('manage_system_settings')) {
+        items.push({
+            title: 'System Settings',
+            href: admin.system_settings.show(),
+            icon: Cog,
+        });
+    }
+
+    return items;
+});
 
 const footerNavItems: NavItem[] = [
     {

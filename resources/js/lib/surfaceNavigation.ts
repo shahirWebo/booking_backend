@@ -1,7 +1,9 @@
 import {
+    CircleUserRound,
     CalendarRange,
     CircleDollarSign,
     Compass,
+    Cog,
     Headphones,
     Home,
     MapPinned,
@@ -62,6 +64,23 @@ const surfaceNavigation: SurfaceNavigationMap = {
                     matchPrefixes: ['/customer/support'],
                     summary:
                         'Open help, chat, and booking-assistance journeys.',
+                },
+            ],
+        },
+        {
+            key: 'customer-account',
+            title: 'Account',
+            items: [
+                {
+                    key: 'customer-profile',
+                    title: 'Profile',
+                    mobileLabel: 'Profile',
+                    href: '/customer/profile',
+                    icon: CircleUserRound,
+                    requiresAuth: true,
+                    matchPrefixes: ['/customer/profile'],
+                    summary:
+                        'Review your player identity, contact details, and account basics.',
                 },
             ],
         },
@@ -170,6 +189,19 @@ const surfaceNavigation: SurfaceNavigationMap = {
                         'Manage the shared sports catalog used across discovery and vendor operations.',
                 },
                 {
+                    key: 'admin-amenities',
+                    title: 'Amenities',
+                    mobileLabel: 'Amenities',
+                    href: '/admin/operations/amenities',
+                    icon: MapPinned,
+                    requiresAuth: true,
+                    rolesAny: ['super_admin', 'admin_operations'],
+                    permissionsAny: ['manage_amenities'],
+                    matchPrefixes: ['/admin/operations/amenities'],
+                    summary:
+                        'Manage the shared amenities catalog used across venue and turf operations.',
+                },
+                {
                     key: 'admin-finance',
                     title: 'Finance',
                     mobileLabel: 'Finance',
@@ -194,6 +226,19 @@ const surfaceNavigation: SurfaceNavigationMap = {
                     matchPrefixes: ['/admin/governance'],
                     summary:
                         'Control admin roles, permissions, and audit-sensitive workflows.',
+                },
+                {
+                    key: 'admin-system-settings',
+                    title: 'Settings',
+                    mobileLabel: 'Settings',
+                    href: '/admin/governance/system-settings',
+                    icon: Cog,
+                    requiresAuth: true,
+                    rolesAny: ['super_admin'],
+                    permissionsAny: ['manage_system_settings'],
+                    matchPrefixes: ['/admin/governance/system-settings'],
+                    summary:
+                        'Maintain protected platform-wide booking, OTP, and support configuration.',
                 },
             ],
         },

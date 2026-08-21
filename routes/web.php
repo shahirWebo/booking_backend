@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AmenityManagementController;
+use App\Http\Controllers\Admin\SportManagementController;
+use App\Http\Controllers\Admin\SystemSettingManagementController;
+use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,18 +15,56 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::inertia('/', 'customer/Home')->name('home');
 });
 
+Route::middleware(['auth', 'active-user'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function (): void {
+        Route::get('profile', [CustomerProfileController::class, 'show'])->name('profile.show');
+    });
+
 Route::prefix('vendor')->name('vendor.')->group(function () {
     Route::inertia('/', 'vendor/Home')->name('home');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::inertia('/', 'admin/Home')->name('home');
-    Route::inertia('operations/sports', 'admin/Sports')->name('sports.index');
     Route::get('login', fn (Request $request) => Inertia::render('auth/AdminLogin', [
         'canResetPassword' => Features::enabled(Features::resetPasswords()),
         'status' => $request->session()->get('status'),
     ]))->middleware('guest')->name('login');
 });
+
+Route::middleware(['auth', 'active-user', 'permission:manage_sports'])
+    ->prefix('admin/operations')
+    ->name('admin.sports.')
+    ->group(function (): void {
+        Route::get('sports', [SportManagementController::class, 'index'])->name('index');
+        Route::get('sports/create', [SportManagementController::class, 'create'])->name('create');
+        Route::post('sports', [SportManagementController::class, 'store'])->name('store');
+        Route::get('sports/{sport}/edit', [SportManagementController::class, 'edit'])->name('edit');
+        Route::put('sports/{sport}', [SportManagementController::class, 'update'])->name('update');
+        Route::delete('sports/{sport}', [SportManagementController::class, 'destroy'])->name('destroy');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:manage_amenities'])
+    ->prefix('admin/operations')
+    ->name('admin.amenities.')
+    ->group(function (): void {
+        Route::get('amenities', [AmenityManagementController::class, 'index'])->name('index');
+        Route::get('amenities/create', [AmenityManagementController::class, 'create'])->name('create');
+        Route::post('amenities', [AmenityManagementController::class, 'store'])->name('store');
+        Route::get('amenities/{amenity}/edit', [AmenityManagementController::class, 'edit'])->name('edit');
+        Route::put('amenities/{amenity}', [AmenityManagementController::class, 'update'])->name('update');
+        Route::delete('amenities/{amenity}', [AmenityManagementController::class, 'destroy'])->name('destroy');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:manage_system_settings'])
+    ->prefix('admin/governance')
+    ->name('admin.system_settings.')
+    ->group(function (): void {
+        Route::get('system-settings', [SystemSettingManagementController::class, 'show'])->name('show');
+        Route::put('system-settings', [SystemSettingManagementController::class, 'update'])->name('update');
+    });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

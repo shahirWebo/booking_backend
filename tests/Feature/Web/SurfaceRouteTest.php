@@ -8,9 +8,14 @@ it('registers product surface routes with dedicated URI and name prefixes', func
     $routes = [
         'home' => ['GET', '/', 'Welcome'],
         'customer.home' => ['GET', 'customer', 'customer/Home'],
+        'customer.profile.show' => ['GET', 'customer/profile', null],
         'vendor.home' => ['GET', 'vendor', 'vendor/Home'],
         'admin.home' => ['GET', 'admin', 'admin/Home'],
-        'admin.sports.index' => ['GET', 'admin/operations/sports', 'admin/Sports'],
+        'admin.sports.index' => ['GET', 'admin/operations/sports', null],
+        'admin.sports.create' => ['GET', 'admin/operations/sports/create', null],
+        'admin.amenities.index' => ['GET', 'admin/operations/amenities', null],
+        'admin.amenities.create' => ['GET', 'admin/operations/amenities/create', null],
+        'admin.system_settings.show' => ['GET', 'admin/governance/system-settings', null],
         'admin.login' => ['GET', 'admin/login', null],
     ];
 
@@ -39,7 +44,6 @@ it('renders the public surface overview pages', function (string $routeName, str
     ['customer.home', 'customer/Home'],
     ['vendor.home', 'vendor/Home'],
     ['admin.home', 'admin/Home'],
-    ['admin.sports.index', 'admin/Sports'],
     ['admin.login', 'auth/AdminLogin'],
 ]);
 
@@ -47,6 +51,17 @@ it('keeps the authenticated workspace hub protected', function (): void {
     $this->get(route('dashboard'))
         ->assertRedirect(route('login'));
 });
+
+it('keeps protected admin crud pages behind authentication', function (string $routeName): void {
+    $this->get(route($routeName))
+        ->assertRedirect(route('login'));
+})->with([
+    'admin sports' => 'admin.sports.index',
+    'admin sport create' => 'admin.sports.create',
+    'admin amenities' => 'admin.amenities.index',
+    'admin amenity create' => 'admin.amenities.create',
+    'admin system settings' => 'admin.system_settings.show',
+]);
 
 it('renders the authenticated workspace hub for signed-in users', function (): void {
     $user = User::factory()->create();

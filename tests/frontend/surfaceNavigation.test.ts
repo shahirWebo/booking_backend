@@ -58,4 +58,13 @@ describe('surfaceNavigation', () => {
 
         expect(items.map((item) => item.key)).toContain('admin-sports');
     });
+
+    it('shows amenities navigation to admin operators with amenity-management access', () => {
+        const items = getSurfaceBottomNavigation('admin', {
+            ...adminOperationsAuth,
+            permissions: ['manage_amenities'],
+        });
+
+        expect(items.map((item) => item.key)).toContain('admin-amenities');
+    });
 });
