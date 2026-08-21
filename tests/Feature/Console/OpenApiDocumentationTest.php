@@ -23,6 +23,11 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
         ->and($document['paths']['/api/v1/auth/user']['get']['responses'])->toHaveKeys(['200', '401', '403', '429'])
         ->and($document['paths']['/api/v1/auth/session']['delete']['operationId'])->toBe('logout')
         ->and($document['paths']['/api/v1/auth/session']['delete']['responses'])->toHaveKeys(['204', '401', '403', '429'])
+        ->and($document['paths']['/api/v1/admin/sports']['get']['operationId'])->toBe('listAdminSports')
+        ->and($document['paths']['/api/v1/admin/sports']['post']['responses'])->toHaveKeys(['201', '401', '403', '422', '429'])
+        ->and($document['paths']['/api/v1/admin/sports/{sport}']['get']['operationId'])->toBe('getAdminSport')
+        ->and($document['paths']['/api/v1/admin/sports/{sport}']['put']['responses'])->toHaveKeys(['200', '401', '403', '404', '422', '429'])
+        ->and($document['paths']['/api/v1/admin/sports/{sport}']['delete']['responses'])->toHaveKeys(['204', '401', '403', '404', '429'])
         ->and($document['paths']['/api/v1']['get']['operationId'])->toBe('getApiV1Root')
         ->and($document['paths']['/api/v1']['get']['responses'])->toHaveKeys(['204', '429'])
         ->and($document['paths']['/health']['get']['operationId'])->toBe('getHealth')
@@ -30,9 +35,15 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
             'RequestId',
             'ResponseMeta',
             'ErrorResponse',
+            'Sport',
+            'SportInput',
+            'SportResponse',
+            'SportCollectionResponse',
             'HealthStatus',
         ])
         ->and($document['components']['responses'])->toHaveKeys([
+            'ForbiddenError',
+            'ResourceNotFoundError',
             'ServiceUnavailableError',
             'UnauthenticatedError',
             'OtpVerificationRejectedError',
