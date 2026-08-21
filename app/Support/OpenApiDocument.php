@@ -26,6 +26,10 @@ final class OpenApiDocument
                     'description' => 'Passwordless authentication challenge endpoints.',
                 ],
                 [
+                    'name' => 'Customer Profiles',
+                    'description' => 'Authenticated customer profile endpoints.',
+                ],
+                [
                     'name' => 'Platform',
                     'description' => 'Platform-level API and liveness endpoints.',
                 ],
@@ -175,6 +179,31 @@ final class OpenApiDocument
                                 'description' => 'The current bearer credential was revoked.',
                                 'headers' => [
                                     'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/RestrictedAccountError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
+                '/api/v1/customer/profile' => [
+                    'get' => [
+                        'tags' => ['Customer Profiles'],
+                        'operationId' => 'getCustomerProfile',
+                        'summary' => 'Get the current authenticated customer profile.',
+                        'description' => 'Returns the authenticated customer profile projection and creates the profile record on first access when one does not yet exist.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The current authenticated customer profile.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/CustomerProfileResponse'],
+                                    ],
                                 ],
                             ],
                             '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
@@ -890,6 +919,26 @@ final class OpenApiDocument
                                     'status' => ['type' => 'string', 'const' => 'active'],
                                 ],
                             ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'CustomerProfile' => [
+                        'type' => 'object',
+                        'required' => ['id', 'user_id', 'name', 'mobile_number', 'email'],
+                        'properties' => [
+                            'id' => ['type' => 'integer', 'minimum' => 1],
+                            'user_id' => ['type' => 'integer', 'minimum' => 1],
+                            'name' => ['type' => ['string', 'null']],
+                            'mobile_number' => ['type' => ['string', 'null'], 'description' => 'The user\'s verified mobile number in E.164 format when present.'],
+                            'email' => ['type' => ['string', 'null'], 'format' => 'email'],
+                        ],
+                    ],
+                    'CustomerProfileResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => ['$ref' => '#/components/schemas/CustomerProfile'],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],
                     ],

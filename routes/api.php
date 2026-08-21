@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use App\Http\Controllers\Api\V1\Auth\ShowCurrentUserController;
 use App\Http\Controllers\Api\V1\Auth\VerifyOtpController;
+use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use App\Http\Controllers\Api\V1\SportController as PublicSportController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,13 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
         Route::get('user', ShowCurrentUserController::class)->middleware(['auth:sanctum', 'active-user'])->name('user.show');
         Route::delete('session', LogoutController::class)->middleware(['auth:sanctum', 'active-user'])->name('session.destroy');
     });
+
+    Route::middleware(['auth:sanctum', 'active-user'])
+        ->prefix('customer')
+        ->as('customer.')
+        ->group(function (): void {
+            Route::get('profile', [CustomerProfileController::class, 'show'])->name('profile.show');
+        });
 
     Route::middleware(['auth:sanctum', 'active-user', 'permission:manage_sports'])
         ->prefix('admin')

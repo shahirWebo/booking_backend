@@ -25,6 +25,9 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
         ->and($document['paths']['/api/v1/auth/user']['get']['responses'])->toHaveKeys(['200', '401', '403', '429'])
         ->and($document['paths']['/api/v1/auth/session']['delete']['operationId'])->toBe('logout')
         ->and($document['paths']['/api/v1/auth/session']['delete']['responses'])->toHaveKeys(['204', '401', '403', '429'])
+        ->and($document['paths']['/api/v1/customer/profile']['get']['operationId'])->toBe('getCustomerProfile')
+        ->and($document['paths']['/api/v1/customer/profile']['get']['security'])->toBe([['BearerAuth' => []]])
+        ->and($document['paths']['/api/v1/customer/profile']['get']['responses'])->toHaveKeys(['200', '401', '403', '429'])
         ->and($document['paths']['/api/v1/admin/sports']['get']['operationId'])->toBe('listAdminSports')
         ->and($document['paths']['/api/v1/admin/sports']['post']['responses'])->toHaveKeys(['201', '401', '403', '422', '429'])
         ->and($document['paths']['/api/v1/admin/sports/{sport}']['get']['operationId'])->toBe('getAdminSport')
@@ -44,6 +47,8 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
             'RequestId',
             'ResponseMeta',
             'ErrorResponse',
+            'CustomerProfile',
+            'CustomerProfileResponse',
             'Amenity',
             'AmenityInput',
             'AmenityResponse',
