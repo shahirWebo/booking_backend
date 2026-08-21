@@ -46,6 +46,8 @@ Route::middleware(['auth', 'active-user'])
             ->name('onboarding.business-details.update');
         Route::put('onboarding/{vendor}/primary-contact', [VendorOnboardingController::class, 'updatePrimaryContact'])
             ->name('onboarding.primary-contact.update');
+        Route::put('onboarding/{vendor}/gst-details', [VendorOnboardingController::class, 'updateGstDetails'])
+            ->name('onboarding.gst-details.update');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

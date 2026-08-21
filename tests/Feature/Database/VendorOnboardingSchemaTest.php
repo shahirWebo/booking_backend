@@ -13,7 +13,8 @@ uses(RefreshDatabase::class);
 test('vendor onboarding tables store versioned private evidence and lifecycle history', function () {
     expect(Schema::hasColumns('vendors', [
         'legal_name', 'display_name', 'legal_entity_type', 'primary_contact_name',
-        'primary_contact_email', 'primary_contact_mobile_number', 'submission_version',
+        'primary_contact_email', 'primary_contact_mobile_number', 'is_gst_registered', 'gstin',
+        'submission_version',
     ]))->toBeTrue();
     expect(Schema::hasColumns('vendor_documents', [
         'vendor_id', 'file_id', 'document_type', 'submission_version', 'status',

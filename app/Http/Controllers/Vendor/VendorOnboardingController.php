@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Domain\Vendors\Actions\StartVendorOnboardingAction;
 use App\Domain\Vendors\Actions\UpdateVendorBusinessDetailsAction;
+use App\Domain\Vendors\Actions\UpdateVendorGstDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorPrimaryContactAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\UpdateVendorBusinessDetailsRequest;
+use App\Http\Requests\Vendor\UpdateVendorGstDetailsRequest;
 use App\Http\Requests\Vendor\UpdateVendorPrimaryContactRequest;
 use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +21,7 @@ final class VendorOnboardingController extends Controller
     public function __construct(
         private readonly StartVendorOnboardingAction $startVendorOnboarding,
         private readonly UpdateVendorBusinessDetailsAction $updateVendorBusinessDetails,
+        private readonly UpdateVendorGstDetailsAction $updateVendorGstDetails,
         private readonly UpdateVendorPrimaryContactAction $updateVendorPrimaryContact,
     ) {}
 
@@ -36,6 +39,8 @@ final class VendorOnboardingController extends Controller
                 'primary_contact_name' => $vendor->primary_contact_name,
                 'primary_contact_email' => $vendor->primary_contact_email,
                 'primary_contact_mobile_number' => $vendor->primary_contact_mobile_number,
+                'is_gst_registered' => $vendor->is_gst_registered,
+                'gstin' => $vendor->gstin,
                 'submission_version' => $vendor->submission_version,
             ],
             'owner' => [
@@ -49,6 +54,13 @@ final class VendorOnboardingController extends Controller
     public function updateBusinessDetails(UpdateVendorBusinessDetailsRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->updateVendorBusinessDetails->execute($vendor, $request->businessDetails());
+
+        return to_route('vendor.onboarding.show');
+    }
+
+    public function updateGstDetails(UpdateVendorGstDetailsRequest $request, Vendor $vendor): RedirectResponse
+    {
+        $this->updateVendorGstDetails->execute($vendor, $request->gstDetails());
 
         return to_route('vendor.onboarding.show');
     }
