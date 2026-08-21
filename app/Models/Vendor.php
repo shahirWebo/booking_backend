@@ -13,10 +13,11 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property VendorStatus $status
+ * @property int $submission_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['status'])]
+#[Fillable(['status', 'submission_version'])]
 class Vendor extends Model
 {
     /** @use HasFactory<VendorFactory> */
@@ -46,5 +47,35 @@ class Vendor extends Model
     public function activeMembers(): HasMany
     {
         return $this->memberships()->where('status', 'active');
+    }
+
+    /**
+     * The private KYC and business-document attachments supplied by this vendor.
+     *
+     * @return HasMany<VendorDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(VendorDocument::class);
+    }
+
+    /**
+     * The private payout accounts supplied by this vendor.
+     *
+     * @return HasMany<VendorBankAccount, $this>
+     */
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(VendorBankAccount::class);
+    }
+
+    /**
+     * Append-only lifecycle transitions for this vendor.
+     *
+     * @return HasMany<VendorStatusHistory, $this>
+     */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(VendorStatusHistory::class);
     }
 }
