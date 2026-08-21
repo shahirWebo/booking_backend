@@ -34,6 +34,10 @@ final class OpenApiDocument
                     'description' => 'Administrative sport master-data management endpoints.',
                 ],
                 [
+                    'name' => 'Admin Amenities',
+                    'description' => 'Administrative amenity master-data management endpoints.',
+                ],
+                [
                     'name' => 'Sports',
                     'description' => 'Public sport discovery endpoints.',
                 ],
@@ -321,6 +325,163 @@ final class OpenApiDocument
                         'responses' => [
                             '204' => [
                                 'description' => 'The sport was deleted.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
+                '/api/v1/admin/amenities' => [
+                    'get' => [
+                        'tags' => ['Admin Amenities'],
+                        'operationId' => 'listAdminAmenities',
+                        'summary' => 'List amenities for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The current amenities master-data list.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/AmenityCollectionResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'post' => [
+                        'tags' => ['Admin Amenities'],
+                        'operationId' => 'createAdminAmenity',
+                        'summary' => 'Create an amenity for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/AmenityInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '201' => [
+                                'description' => 'The amenity was created.',
+                                'headers' => [
+                                    'Location' => [
+                                        'schema' => ['type' => 'string'],
+                                    ],
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/AmenityResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                ],
+                '/api/v1/admin/amenities/{amenity}' => [
+                    'get' => [
+                        'tags' => ['Admin Amenities'],
+                        'operationId' => 'getAdminAmenity',
+                        'summary' => 'Get one amenity for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'amenity',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The requested amenity.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/AmenityResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'put' => [
+                        'tags' => ['Admin Amenities'],
+                        'operationId' => 'updateAdminAmenity',
+                        'summary' => 'Update one amenity for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'amenity',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => ['$ref' => '#/components/schemas/AmenityInput'],
+                                ],
+                            ],
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'The amenity was updated.',
+                                'headers' => [
+                                    'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
+                                ],
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => ['$ref' => '#/components/schemas/AmenityResponse'],
+                                    ],
+                                ],
+                            ],
+                            '401' => ['$ref' => '#/components/responses/UnauthenticatedError'],
+                            '403' => ['$ref' => '#/components/responses/ForbiddenError'],
+                            '404' => ['$ref' => '#/components/responses/ResourceNotFoundError'],
+                            '422' => ['$ref' => '#/components/responses/ValidationError'],
+                            '429' => ['$ref' => '#/components/responses/RateLimitedError'],
+                        ],
+                    ],
+                    'delete' => [
+                        'tags' => ['Admin Amenities'],
+                        'operationId' => 'deleteAdminAmenity',
+                        'summary' => 'Delete one amenity for platform administration.',
+                        'security' => [['BearerAuth' => []]],
+                        'parameters' => [
+                            [
+                                'name' => 'amenity',
+                                'in' => 'path',
+                                'required' => true,
+                                'schema' => ['type' => 'integer', 'minimum' => 1],
+                            ],
+                        ],
+                        'responses' => [
+                            '204' => [
+                                'description' => 'The amenity was deleted.',
                                 'headers' => [
                                     'X-Request-ID' => ['$ref' => '#/components/headers/XRequestId'],
                                 ],
@@ -666,6 +827,49 @@ final class OpenApiDocument
                                     'email' => ['type' => ['string', 'null'], 'format' => 'email'],
                                     'status' => ['type' => 'string', 'const' => 'active'],
                                 ],
+                            ],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'Amenity' => [
+                        'type' => 'object',
+                        'required' => ['id', 'name', 'code', 'description', 'created_at', 'updated_at'],
+                        'properties' => [
+                            'id' => ['type' => 'integer', 'minimum' => 1],
+                            'name' => ['type' => 'string', 'maxLength' => 255],
+                            'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
+                            'description' => ['type' => ['string', 'null']],
+                            'created_at' => ['type' => 'string', 'format' => 'date-time'],
+                            'updated_at' => ['type' => 'string', 'format' => 'date-time'],
+                        ],
+                    ],
+                    'AmenityInput' => [
+                        'type' => 'object',
+                        'required' => ['name', 'code'],
+                        'properties' => [
+                            'name' => ['type' => 'string', 'maxLength' => 255],
+                            'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
+                            'description' => ['type' => ['string', 'null']],
+                        ],
+                    ],
+                    'AmenityResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'message' => ['type' => 'string'],
+                            'data' => ['$ref' => '#/components/schemas/Amenity'],
+                            'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
+                        ],
+                    ],
+                    'AmenityCollectionResponse' => [
+                        'type' => 'object',
+                        'required' => ['success', 'data', 'meta'],
+                        'properties' => [
+                            'success' => ['type' => 'boolean', 'const' => true],
+                            'data' => [
+                                'type' => 'array',
+                                'items' => ['$ref' => '#/components/schemas/Amenity'],
                             ],
                             'meta' => ['$ref' => '#/components/schemas/ResponseMeta'],
                         ],
