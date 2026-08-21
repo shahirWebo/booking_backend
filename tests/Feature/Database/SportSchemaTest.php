@@ -11,6 +11,10 @@ test('sports table stores the display name and stable unique code', function () 
         'code',
         'description',
         'is_active',
+        'icon_asset_key',
+        'icon_alt_text',
+        'image_asset_key',
+        'image_alt_text',
         'created_at',
         'updated_at',
     ]))->toBeTrue();
@@ -20,6 +24,10 @@ test('sports table stores the display name and stable unique code', function () 
         'code' => 'football',
         'description' => 'Association football supported for turf discovery and booking.',
         'is_active' => false,
+        'icon_asset_key' => 'sports/icons/football.png',
+        'icon_alt_text' => 'Football sport icon',
+        'image_asset_key' => 'sports/images/football.png',
+        'image_alt_text' => 'Football sport image',
     ]);
 
     expect($sport)->toBeInstanceOf(Sport::class);
@@ -30,6 +38,10 @@ test('sports table stores the display name and stable unique code', function () 
         'Association football supported for turf discovery and booking.',
     );
     expect($sport->is_active)->toBeFalse();
+    expect($sport->icon_asset_key)->toBe('sports/icons/football.png');
+    expect($sport->icon_alt_text)->toBe('Football sport icon');
+    expect($sport->image_asset_key)->toBe('sports/images/football.png');
+    expect($sport->image_alt_text)->toBe('Football sport image');
 });
 
 test('sports default to active status when a status is not provided', function () {
