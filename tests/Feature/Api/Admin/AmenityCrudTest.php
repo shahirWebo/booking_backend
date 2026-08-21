@@ -46,44 +46,50 @@ test('authorized admins can list, create, show, update, and delete amenities', f
     getJson(route('api.v1.admin.amenities.index'))
         ->assertOk()
         ->assertJsonPath('success', true)
-        ->assertJsonCount(0, 'data');
+        ->assertJsonCount(6, 'data');
 
     $createResponse = postJson(route('api.v1.admin.amenities.store'), [
-        'name' => 'Parking',
-        'code' => 'parking',
-        'description' => 'Vehicle parking available at the venue.',
+        'name' => 'Drinking Water',
+        'code' => 'drinking_water',
+        'description' => 'Filtered drinking water is available on-site.',
+        'is_active' => false,
     ])
         ->assertCreated()
         ->assertHeader('Location')
         ->assertJsonPath('success', true)
         ->assertJsonPath('message', 'Amenity created.')
-        ->assertJsonPath('data.name', 'Parking')
-        ->assertJsonPath('data.code', 'parking');
+        ->assertJsonPath('data.name', 'Drinking Water')
+        ->assertJsonPath('data.code', 'drinking_water')
+        ->assertJsonPath('data.is_active', false);
 
     $amenityId = $createResponse->json('data.id');
 
     getJson(route('api.v1.admin.amenities.show', $amenityId))
         ->assertOk()
-        ->assertJsonPath('data.description', 'Vehicle parking available at the venue.');
+        ->assertJsonPath('data.description', 'Filtered drinking water is available on-site.')
+        ->assertJsonPath('data.is_active', false);
 
     putJson(route('api.v1.admin.amenities.update', $amenityId), [
         'name' => 'Locker Room',
         'code' => 'locker_room',
         'description' => 'Secure locker-room storage for players.',
+        'is_active' => true,
     ])
         ->assertOk()
         ->assertJsonPath('message', 'Amenity updated.')
         ->assertJsonPath('data.name', 'Locker Room')
-        ->assertJsonPath('data.code', 'locker_room');
+        ->assertJsonPath('data.code', 'locker_room')
+        ->assertJsonPath('data.is_active', true);
 
     getJson(route('api.v1.admin.amenities.index'))
         ->assertOk()
-        ->assertJsonCount(1, 'data');
+        ->assertJsonCount(7, 'data');
 
     getJson(route('api.v1.admin.amenities.show', $amenityId))
         ->assertOk()
         ->assertJsonPath('data.name', 'Locker Room')
-        ->assertJsonPath('data.description', 'Secure locker-room storage for players.');
+        ->assertJsonPath('data.description', 'Secure locker-room storage for players.')
+        ->assertJsonPath('data.is_active', true);
 
     deleteJson(route('api.v1.admin.amenities.destroy', $amenityId))
         ->assertNoContent();
@@ -96,11 +102,7 @@ test('admin amenity create and update validate unique fields and supported code 
     $user->roles()->attach(Role::query()->where('code', 'super_admin')->firstOrFail());
     $token = $user->createToken('admin-amenities-super-admin');
 
-    $amenity = Amenity::query()->create([
-        'name' => 'Parking',
-        'code' => 'parking',
-        'description' => 'Vehicle parking available at the venue.',
-    ]);
+    $amenity = Amenity::query()->where('code', 'parking')->sole();
 
     withToken($token->plainTextToken);
 
@@ -108,16 +110,13 @@ test('admin amenity create and update validate unique fields and supported code 
         'name' => 'Parking',
         'code' => 'Parking',
         'description' => 123,
+        'is_active' => 'sometimes',
     ])
         ->assertUnprocessable()
         ->assertJsonPath('code', 'VALIDATION_ERROR')
-        ->assertJsonStructure(['errors' => ['name', 'code', 'description']]);
+        ->assertJsonStructure(['errors' => ['name', 'code', 'description', 'is_active']]);
 
-    $otherAmenity = Amenity::query()->create([
-        'name' => 'Washroom',
-        'code' => 'washroom',
-        'description' => 'Restroom facilities.',
-    ]);
+    $otherAmenity = Amenity::query()->where('code', 'washroom')->sole();
 
     putJson(route('api.v1.admin.amenities.update', $otherAmenity), [
         'name' => 'Parking',

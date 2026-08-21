@@ -10,6 +10,7 @@ test('amenities table stores the display name and stable unique code', function 
         'name',
         'code',
         'description',
+        'is_active',
         'created_at',
         'updated_at',
     ]))->toBeTrue();
@@ -18,6 +19,7 @@ test('amenities table stores the display name and stable unique code', function 
         'name' => 'Parking',
         'code' => 'parking',
         'description' => 'Vehicle parking available at the venue.',
+        'is_active' => false,
     ]);
 
     expect($amenity)->toBeInstanceOf(Amenity::class);
@@ -25,6 +27,16 @@ test('amenities table stores the display name and stable unique code', function 
     expect($amenity->name)->toBe('Parking');
     expect($amenity->code)->toBe('parking');
     expect($amenity->description)->toBe('Vehicle parking available at the venue.');
+    expect($amenity->is_active)->toBeFalse();
+});
+
+test('amenities default to active status when a status is not provided', function () {
+    $amenity = Amenity::query()->create([
+        'name' => 'Locker',
+        'code' => 'locker',
+    ]);
+
+    expect($amenity->refresh()->is_active)->toBeTrue();
 });
 
 test('amenities require unique display names and stable codes', function () {

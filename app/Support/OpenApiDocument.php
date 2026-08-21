@@ -833,12 +833,13 @@ final class OpenApiDocument
                     ],
                     'Amenity' => [
                         'type' => 'object',
-                        'required' => ['id', 'name', 'code', 'description', 'created_at', 'updated_at'],
+                        'required' => ['id', 'name', 'code', 'description', 'is_active', 'created_at', 'updated_at'],
                         'properties' => [
                             'id' => ['type' => 'integer', 'minimum' => 1],
                             'name' => ['type' => 'string', 'maxLength' => 255],
                             'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
                             'description' => ['type' => ['string', 'null']],
+                            'is_active' => ['type' => 'boolean'],
                             'created_at' => ['type' => 'string', 'format' => 'date-time'],
                             'updated_at' => ['type' => 'string', 'format' => 'date-time'],
                         ],
@@ -850,6 +851,7 @@ final class OpenApiDocument
                             'name' => ['type' => 'string', 'maxLength' => 255],
                             'code' => ['type' => 'string', 'maxLength' => 100, 'pattern' => '^[a-z0-9]+(?:_[a-z0-9]+)*$'],
                             'description' => ['type' => ['string', 'null']],
+                            'is_active' => ['type' => 'boolean', 'default' => true],
                         ],
                     ],
                     'AmenityResponse' => [

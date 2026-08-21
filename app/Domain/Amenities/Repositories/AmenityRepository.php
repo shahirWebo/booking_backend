@@ -18,7 +18,7 @@ final class AmenityRepository
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
      */
     public function create(array $attributes): Amenity
     {
@@ -29,7 +29,7 @@ final class AmenityRepository
     }
 
     /**
-     * @param  array{name: string, code: string, description?: string|null}  $attributes
+     * @param  array{name: string, code: string, description?: string|null, is_active?: bool}  $attributes
      */
     public function update(Amenity $amenity, array $attributes): Amenity
     {
