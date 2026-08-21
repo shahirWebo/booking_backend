@@ -29,7 +29,6 @@ export type AuthenticatedApiUser = {
 export type OtpVerificationResponse = {
     access_token: string;
     token_type: 'Bearer';
-    user: AuthenticatedApiUser;
 };
 
 type AuthApiServiceDependencies = {

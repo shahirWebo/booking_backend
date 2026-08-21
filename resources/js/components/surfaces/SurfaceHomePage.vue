@@ -3,7 +3,10 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowRight, RotateCcw } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
-import { getBrowserSessionState } from '@/lib/browserSession';
+import {
+    getBrowserSessionState,
+    resolveBrowserSessionAuth,
+} from '@/lib/browserSession';
 import { findProductSurface } from '@/lib/productSurfaces';
 import type { ProductSurfaceKey } from '@/lib/productSurfaces';
 import { getSurfaceNavigation } from '@/lib/surfaceNavigation';
@@ -14,10 +17,11 @@ const props = defineProps<{
 
 const page = usePage();
 const browserSession = getBrowserSessionState();
+const auth = computed(() => resolveBrowserSessionAuth(page.props.auth));
 
 const surface = computed(() => findProductSurface(props.surfaceKey));
 const navigationSections = computed(() =>
-    getSurfaceNavigation(props.surfaceKey, page.props.auth),
+    getSurfaceNavigation(props.surfaceKey, auth.value),
 );
 const browserSessionTimestamp = computed(() =>
     browserSession.lastRestoredAt
