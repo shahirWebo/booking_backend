@@ -12,6 +12,8 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
     $document = OpenApiDocument::toArray();
 
     expect($document['openapi'])->toBe('3.1.1')
+        ->and($document['paths']['/api/v1/sports']['get']['operationId'])->toBe('listSports')
+        ->and($document['paths']['/api/v1/sports']['get']['responses'])->toHaveKeys(['200', '429'])
         ->and($document['paths']['/api/v1/auth/otp-requests']['post']['operationId'])->toBe('requestOtp')
         ->and($document['paths']['/api/v1/auth/otp-requests']['post']['requestBody']['required'])->toBeTrue()
         ->and($document['paths']['/api/v1/auth/otp-requests']['post']['responses'])->toHaveKey('422')
@@ -39,6 +41,8 @@ test('the OpenAPI contract describes the current platform endpoints and shared e
             'SportInput',
             'SportResponse',
             'SportCollectionResponse',
+            'PublicSport',
+            'PublicSportCollectionResponse',
             'HealthStatus',
         ])
         ->and($document['components']['responses'])->toHaveKeys([

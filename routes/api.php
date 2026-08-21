@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
 use App\Http\Controllers\Api\V1\Auth\ShowCurrentUserController;
 use App\Http\Controllers\Api\V1\Auth\VerifyOtpController;
+use App\Http\Controllers\Api\V1\SportController as PublicSportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Route;
  */
 Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (): void {
     Route::get('/', fn () => response()->noContent())->name('index');
+    Route::get('sports', [PublicSportController::class, 'index'])->name('sports.index');
 
     Route::prefix('auth')->as('auth.')->group(function (): void {
         Route::post('otp-requests', RequestOtpController::class)->name('otp_requests.store');
