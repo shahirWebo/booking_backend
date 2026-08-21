@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AmenityController;
 use App\Http\Controllers\Api\V1\Admin\SportController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\RequestOtpController;
@@ -29,5 +30,12 @@ Route::middleware('throttle:api')->prefix('v1')->as('api.v1.')->group(function (
         ->as('admin.')
         ->group(function (): void {
             Route::apiResource('sports', SportController::class);
+        });
+
+    Route::middleware(['auth:sanctum', 'active-user', 'permission:manage_amenities'])
+        ->prefix('admin')
+        ->as('admin.')
+        ->group(function (): void {
+            Route::apiResource('amenities', AmenityController::class);
         });
 });
