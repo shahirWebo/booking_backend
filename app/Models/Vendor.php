@@ -98,4 +98,14 @@ class Vendor extends Model
     {
         return $this->hasMany(VendorStatusHistory::class);
     }
+
+    /**
+     * Immutable review snapshots submitted by this vendor.
+     *
+     * @return HasMany<VendorSubmissionSnapshot, $this>
+     */
+    public function submissionSnapshots(): HasMany
+    {
+        return $this->hasMany(VendorSubmissionSnapshot::class);
+    }
 }

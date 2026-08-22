@@ -31,6 +31,9 @@ test('vendor onboarding tables store versioned private evidence and lifecycle hi
     expect(Schema::hasColumns('vendor_status_histories', [
         'vendor_id', 'actor_user_id', 'sequence', 'from_status', 'to_status', 'correlation_id', 'transitioned_at',
     ]))->toBeTrue();
+    expect(Schema::hasColumns('vendor_submission_snapshots', [
+        'vendor_id', 'submission_version', 'submitted_by_user_id', 'snapshot', 'submitted_at',
+    ]))->toBeTrue();
 
     $vendor = Vendor::factory()->create();
     $actor = User::factory()->create();
@@ -134,6 +137,23 @@ test('vendor onboarding evidence and lifecycle sequences are unique within a sub
     DB::table('vendor_status_histories')->insert($history);
 
     expect(fn () => DB::table('vendor_status_histories')->insert($history))->toThrow(QueryException::class);
+});
+
+test('vendor submission snapshots are unique for a vendor submission version', function (): void {
+    $vendor = Vendor::factory()->create();
+
+    $snapshot = [
+        'vendor_id' => $vendor->id,
+        'submission_version' => 1,
+        'snapshot' => json_encode(['document_ids' => []], JSON_THROW_ON_ERROR),
+        'submitted_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    DB::table('vendor_submission_snapshots')->insert($snapshot);
+
+    expect(fn () => DB::table('vendor_submission_snapshots')->insert($snapshot))->toThrow(QueryException::class);
 });
 
 test('vendor onboarding tables provide their lifecycle lookup indexes', function () {
