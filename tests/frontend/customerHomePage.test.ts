@@ -16,6 +16,10 @@ describe('customer home page', () => {
     it('renders the mobile discovery entry points', () => {
         const wrapper = mount(CustomerHomePage, {
             props: {
+                sports: [
+                    { id: 9, name: 'Football', code: 'football' },
+                    { id: 12, name: 'Badminton', code: 'badminton' },
+                ],
                 nearbyTurfs: [
                     {
                         id: 7,
@@ -39,6 +43,8 @@ describe('customer home page', () => {
         expect(wrapper.text()).toContain('What sport are you looking for?');
         expect(wrapper.text()).toContain('Find a court for tonight');
         expect(wrapper.text()).toContain('Categories');
+        expect(wrapper.text()).toContain('Football');
+        expect(wrapper.text()).toContain('Badminton');
         expect(wrapper.text()).toContain('Nearby arenas');
         expect(wrapper.text()).toContain('Rivershore Arena');
         expect(wrapper.get('a[href="/customer/turfs/7"]')).toBeDefined();

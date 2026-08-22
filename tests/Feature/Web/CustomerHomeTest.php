@@ -4,11 +4,22 @@ use App\Domain\Locations\Enums\LocationStatus;
 use App\Domain\Pricing\Enums\PricingRuleType;
 use App\Domain\Turfs\Enums\TurfStatus;
 use App\Models\Location;
+use App\Models\Sport;
 use App\Models\Turf;
 use App\Models\Vendor;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('customer home lists active turfs with customer-safe summaries', function (): void {
+    $sport = Sport::query()->create([
+        'name' => 'Football',
+        'code' => 'football',
+        'is_active' => true,
+    ]);
+    Sport::query()->create([
+        'name' => 'Hidden Sport',
+        'code' => 'hidden_sport',
+        'is_active' => false,
+    ]);
     $location = Location::query()->create([
         'vendor_id' => Vendor::factory()->create()->id,
         'name' => 'Home Discovery Arena',
@@ -50,6 +61,9 @@ test('customer home lists active turfs with customer-safe summaries', function (
             ->where('nearbyTurfs.0.name', 'Home Match Turf')
             ->where('nearbyTurfs.0.location.locality', 'Indiranagar')
             ->where('nearbyTurfs.0.pricing_summary.starting_price', '500.00')
-            ->where('nearbyTurfs.0.detail_url', route('customer.turfs.show', $turf)),
+            ->where('nearbyTurfs.0.detail_url', route('customer.turfs.show', $turf))
+            ->where('sports.0.id', $sport->id)
+            ->where('sports.0.name', 'Football')
+            ->has('sports', 1),
         );
 });

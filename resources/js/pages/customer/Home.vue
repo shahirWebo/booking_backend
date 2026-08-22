@@ -28,7 +28,9 @@ type NearbyTurf = {
     detail_url: string;
 };
 
-const props = defineProps<{ nearbyTurfs: NearbyTurf[] }>();
+type Sport = { id: number; name: string; code: string };
+
+const props = defineProps<{ nearbyTurfs: NearbyTurf[]; sports: Sport[] }>();
 const page = usePage<{ auth: { user: SharedUser | null } }>();
 const firstName = computed(
     () =>
@@ -36,20 +38,23 @@ const firstName = computed(
         'Player',
 );
 
-const categories = [
-    { label: 'Cricket', icon: Trophy, tone: 'bg-sky-100 text-sky-700' },
-    { label: 'Football', icon: Dumbbell, tone: 'bg-rose-100 text-rose-600' },
-    {
-        label: 'Badminton',
-        icon: Volleyball,
-        tone: 'bg-amber-100 text-amber-700',
-    },
-    {
-        label: 'Basketball',
-        icon: CircleUserRound,
-        tone: 'bg-orange-100 text-orange-600',
-    },
-];
+const categories = computed(() =>
+    props.sports.map((sport, index) => ({
+        ...sport,
+        icon:
+            {
+                football: Dumbbell,
+                badminton: Volleyball,
+                basketball: CircleUserRound,
+            }[sport.code] ?? Trophy,
+        tone: [
+            'bg-sky-100 text-sky-700',
+            'bg-rose-100 text-rose-600',
+            'bg-amber-100 text-amber-700',
+            'bg-orange-100 text-orange-600',
+        ][index % 4],
+    })),
+);
 
 const navigation = [
     { label: 'Home', icon: House, href: customer.home(), active: true },
@@ -151,10 +156,10 @@ const navigation = [
                 >
                     <Link
                         v-for="category in categories"
-                        :key="category.label"
+                        :key="category.id"
                         :href="
                             customer.search.index({
-                                query: { turf_name: category.label },
+                                query: { sport_ids: [category.id] },
                             })
                         "
                         class="flex w-[4.8rem] shrink-0 flex-col items-center gap-2 rounded-2xl bg-white px-2 py-3 shadow-[0_10px_22px_-18px_rgba(15,23,42,0.55)] transition hover:-translate-y-0.5"
@@ -168,7 +173,7 @@ const navigation = [
                                 class="h-4 w-4" /></span
                         ><span
                             class="text-center text-[10px] font-medium text-slate-600"
-                            >{{ category.label }}</span
+                            >{{ category.name }}</span
                         ></Link
                     >
                 </div>
