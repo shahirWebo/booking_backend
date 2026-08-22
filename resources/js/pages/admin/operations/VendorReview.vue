@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, BadgeCheck, Landmark, ShieldCheck } from '@lucide/vue';
+import {
+    ArrowLeft,
+    BadgeCheck,
+    Landmark,
+    ShieldCheck,
+    XCircle,
+} from '@lucide/vue';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 
@@ -40,8 +47,12 @@ const props = defineProps<{
     routes: {
         index: string;
         approve: string;
+        reject: string;
     };
 }>();
+
+const rejectionReasonCode = ref('document_verification_required');
+const rejectionReasonMessage = ref('');
 
 defineOptions({
     layout: {
@@ -59,6 +70,22 @@ function approve(): void {
 
     router.post(props.routes.approve, {
         submission_version: props.vendor.submission_version,
+    });
+}
+
+function reject(): void {
+    if (
+        !window.confirm(
+            'Reject this application and return it to the vendor for correction?',
+        )
+    ) {
+        return;
+    }
+
+    router.post(props.routes.reject, {
+        submission_version: props.vendor.submission_version,
+        reason_code: rejectionReasonCode.value,
+        reason_message: rejectionReasonMessage.value,
     });
 }
 </script>
@@ -94,10 +121,16 @@ function approve(): void {
                         {{ vendor.submitted_at }}
                     </p>
                 </div>
-                <Button @click="approve">
-                    <BadgeCheck class="h-4 w-4" />
-                    Approve vendor
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" @click="reject">
+                        <XCircle class="h-4 w-4" />
+                        Reject application
+                    </Button>
+                    <Button @click="approve">
+                        <BadgeCheck class="h-4 w-4" />
+                        Approve vendor
+                    </Button>
+                </div>
             </div>
         </section>
 
@@ -177,5 +210,47 @@ function approve(): void {
                 </div>
             </section>
         </div>
+
+        <section
+            class="rounded-3xl border border-sidebar-border/70 bg-background p-5 dark:border-sidebar-border"
+        >
+            <h2 class="font-semibold">Rejection guidance</h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+                This owner-facing message explains what must be corrected. Do
+                not include internal investigations, risk signals, or policy
+                notes.
+            </p>
+            <div
+                class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,0.35fr)_minmax(0,0.65fr)]"
+            >
+                <label class="grid gap-2 text-sm font-medium">
+                    Reason category
+                    <select
+                        v-model="rejectionReasonCode"
+                        class="rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                    >
+                        <option value="business_information_mismatch">
+                            Business information mismatch
+                        </option>
+                        <option value="document_verification_required">
+                            Document verification required
+                        </option>
+                        <option value="incomplete_submission">
+                            Incomplete submission
+                        </option>
+                        <option value="other">Other</option>
+                    </select>
+                </label>
+                <label class="grid gap-2 text-sm font-medium">
+                    Safe message
+                    <textarea
+                        v-model="rejectionReasonMessage"
+                        rows="3"
+                        class="rounded-xl border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Describe the correction required for resubmission."
+                    />
+                </label>
+            </div>
+        </section>
     </div>
 </template>
