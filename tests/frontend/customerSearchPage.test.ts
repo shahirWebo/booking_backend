@@ -192,6 +192,83 @@ describe('customer search page geolocation', () => {
         expect(inertia.get).not.toHaveBeenCalled();
     });
 
+    it('opens the mobile filter sheet and applies selected filters', async () => {
+        const wrapper = mount(SearchPage, {
+            props: {
+                ...props,
+                options: {
+                    ...props.options,
+                    sports: [{ id: 8, name: 'Football' }],
+                },
+            },
+            attachTo: document.body,
+        });
+        const filtersButton = wrapper
+            .findAll('button')
+            .find((button) => button.text().includes('Filters'));
+
+        await filtersButton?.trigger('click');
+
+        expect(document.body.textContent).toContain('Refine your search');
+
+        const footballButton = [
+            ...document.body.querySelectorAll('button'),
+        ].find((button) => button.textContent?.trim() === 'Football');
+        footballButton?.click();
+        await wrapper.vm.$nextTick();
+
+        const applyButton = [...document.body.querySelectorAll('button')].find(
+            (button) => button.textContent?.includes('Show results'),
+        );
+        applyButton?.click();
+        await wrapper.vm.$nextTick();
+
+        expect(inertia.get).toHaveBeenCalledWith(
+            '/customer/search',
+            expect.objectContaining({
+                preserveScroll: true,
+                preserveState: true,
+            }),
+        );
+
+        wrapper.unmount();
+    });
+
+    it('refreshes results when the dedicated sort control changes', async () => {
+        const wrapper = mount(SearchPage, {
+            props: {
+                ...props,
+                options: {
+                    ...props.options,
+                    sorts: [
+                        { value: 'recommended', label: 'Recommended' },
+                        { value: 'lowest_price', label: 'Lowest price' },
+                        { value: 'distance', label: 'Distance' },
+                    ],
+                },
+            },
+        });
+
+        expect(
+            wrapper
+                .get('#results-sort option[value="distance"]')
+                .attributes('disabled'),
+        ).toBeDefined();
+
+        await wrapper.get('#results-sort').setValue('lowest_price');
+
+        expect(inertia.get).toHaveBeenCalledWith(
+            '/customer/search',
+            expect.objectContaining({
+                preserveScroll: true,
+                preserveState: true,
+            }),
+        );
+        expect(
+            (wrapper.get('#results-sort').element as HTMLSelectElement).value,
+        ).toBe('lowest_price');
+    });
+
     it('lets customers select a listed area without coordinates', async () => {
         const wrapper = mount(SearchPage, {
             props: {

@@ -1,11 +1,24 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowRight, Compass, MapPin, Search as SearchIcon } from '@lucide/vue';
+import {
+    ArrowRight,
+    Compass,
+    MapPin,
+    Search as SearchIcon,
+    SlidersHorizontal,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import EmptyState from '@/components/feedback/EmptyState.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 
 type Option = {
     id: number;
@@ -125,6 +138,7 @@ const geolocationSupported =
     typeof navigator.geolocation?.getCurrentPosition === 'function';
 
 const isRequestingLocation = ref(false);
+const isFilterSheetOpen = ref(false);
 const geolocationMessage = ref(
     geolocationSupported
         ? 'Use your device location to automatically search nearby turfs.'
@@ -147,6 +161,11 @@ function submit(): void {
         preserveScroll: true,
         preserveState: true,
     });
+}
+
+function applyFilters(): void {
+    isFilterSheetOpen.value = false;
+    submit();
 }
 
 function selectManualArea(event: Event): void {
@@ -267,12 +286,232 @@ function requestCurrentLocation(): void {
                     <SearchIcon class="h-4 w-4" />
                     Refresh results
                 </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    class="lg:hidden"
+                    @click="isFilterSheetOpen = true"
+                >
+                    <SlidersHorizontal class="h-4 w-4" />
+                    Filters
+                </Button>
             </div>
         </section>
 
+        <Sheet v-model:open="isFilterSheetOpen">
+            <SheetContent
+                side="bottom"
+                class="h-[88dvh] rounded-t-[2rem] border-x-0 px-5 pt-7"
+            >
+                <SheetHeader class="pr-8 text-left">
+                    <SheetTitle>Refine your search</SheetTitle>
+                    <SheetDescription>
+                        Narrow results by place, sport, price, and availability.
+                    </SheetDescription>
+                </SheetHeader>
+
+                <form
+                    class="mt-2 flex min-h-0 flex-1 flex-col"
+                    @submit.prevent="applyFilters"
+                >
+                    <div class="grid flex-1 gap-4 overflow-y-auto pr-1 pb-5">
+                        <div class="grid gap-2">
+                            <Label for="mobile-turf-name">Turf name</Label>
+                            <Input
+                                id="mobile-turf-name"
+                                v-model="form.turf_name"
+                                name="turf_name"
+                                placeholder="Search by turf name"
+                            />
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="mobile-manual-area"
+                                >Choose an area</Label
+                            >
+                            <select
+                                id="mobile-manual-area"
+                                class="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                                @change="selectManualArea"
+                            >
+                                <option value="">Choose a listed area</option>
+                                <option
+                                    v-for="(
+                                        area, index
+                                    ) in options.location_areas"
+                                    :key="`mobile-${area.city}-${area.locality ?? 'city'}`"
+                                    :value="index"
+                                >
+                                    {{
+                                        [area.locality, area.city]
+                                            .filter(Boolean)
+                                            .join(', ')
+                                    }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="grid gap-2">
+                                <Label for="mobile-city">City</Label>
+                                <Input
+                                    id="mobile-city"
+                                    v-model="form.city"
+                                    name="city"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="mobile-locality">Locality</Label>
+                                <Input
+                                    id="mobile-locality"
+                                    v-model="form.locality"
+                                    name="locality"
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3"
+                        >
+                            <p class="text-sm font-medium text-slate-900">
+                                Nearby search
+                            </p>
+                            <p
+                                class="mt-1 text-xs leading-5"
+                                :class="
+                                    geolocationMessageTone === 'error'
+                                        ? 'text-rose-700'
+                                        : 'text-slate-600'
+                                "
+                            >
+                                {{ geolocationMessage }}
+                            </p>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="mt-3 border-emerald-200 bg-white"
+                                :disabled="
+                                    !geolocationSupported ||
+                                    isRequestingLocation ||
+                                    form.processing
+                                "
+                                @click="requestCurrentLocation"
+                            >
+                                <Compass class="h-4 w-4" />
+                                {{
+                                    isRequestingLocation
+                                        ? 'Locating...'
+                                        : 'Use my location'
+                                }}
+                            </Button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="grid gap-2">
+                                <Label for="mobile-min-price">Min price</Label>
+                                <Input
+                                    id="mobile-min-price"
+                                    v-model="form.min_price"
+                                    name="min_price"
+                                    inputmode="decimal"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="mobile-max-price">Max price</Label>
+                                <Input
+                                    id="mobile-max-price"
+                                    v-model="form.max_price"
+                                    name="max_price"
+                                    inputmode="decimal"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="grid gap-2">
+                                <Label for="mobile-date"
+                                    >Availability date</Label
+                                >
+                                <Input
+                                    id="mobile-date"
+                                    v-model="form.date"
+                                    type="date"
+                                    name="date"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="mobile-is-indoor">Setting</Label>
+                                <select
+                                    id="mobile-is-indoor"
+                                    v-model="form.is_indoor"
+                                    class="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                                >
+                                    <option value="">Indoor or outdoor</option>
+                                    <option value="1">Indoor</option>
+                                    <option value="0">Outdoor</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label>Sports</Label>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="sport in options.sports"
+                                    :key="`mobile-sport-${sport.id}`"
+                                    type="button"
+                                    class="rounded-full border px-3 py-2 text-sm transition"
+                                    :class="
+                                        form.sport_ids.includes(sport.id)
+                                            ? 'border-emerald-600 bg-emerald-600 text-white'
+                                            : 'border-slate-200 bg-white text-slate-700'
+                                    "
+                                    @click="
+                                        toggleSelection('sport_ids', sport.id)
+                                    "
+                                >
+                                    {{ sport.name }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label>Amenities</Label>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="amenity in options.amenities"
+                                    :key="`mobile-amenity-${amenity.id}`"
+                                    type="button"
+                                    class="rounded-full border px-3 py-2 text-sm transition"
+                                    :class="
+                                        form.amenity_ids.includes(amenity.id)
+                                            ? 'border-slate-900 bg-slate-900 text-white'
+                                            : 'border-slate-200 bg-white text-slate-700'
+                                    "
+                                    @click="
+                                        toggleSelection(
+                                            'amenity_ids',
+                                            amenity.id,
+                                        )
+                                    "
+                                >
+                                    {{ amenity.name }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <Button type="submit" class="mt-3 w-full">
+                        <SearchIcon class="h-4 w-4" />
+                        Show results
+                    </Button>
+                </form>
+            </SheetContent>
+        </Sheet>
+
         <section class="grid gap-5 lg:grid-cols-[1.05fr_1.95fr]">
             <form
-                class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm"
+                class="hidden rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm lg:block"
                 @submit.prevent="submit"
             >
                 <div class="flex items-center gap-2">
@@ -562,7 +801,46 @@ function requestCurrentLocation(): void {
                             }}
                             of {{ results.meta.total }}
                         </p>
+
+                        <div class="flex items-center gap-2">
+                            <Label
+                                for="results-sort"
+                                class="text-xs font-medium text-slate-500"
+                            >
+                                Sort by
+                            </Label>
+                            <select
+                                id="results-sort"
+                                v-model="form.sort"
+                                class="h-9 rounded-xl border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700"
+                                @change="submit"
+                            >
+                                <option
+                                    v-for="sortOption in options.sorts"
+                                    :key="`results-${sortOption.value}`"
+                                    :value="sortOption.value"
+                                    :disabled="
+                                        sortOption.value === 'distance' &&
+                                        (!form.latitude || !form.longitude)
+                                    "
+                                >
+                                    {{ sortOption.label }}
+                                </option>
+                            </select>
+                        </div>
                     </div>
+
+                    <p
+                        v-if="
+                            (form.sort === 'rating' && sortWarnings.rating) ||
+                            (form.sort === 'popularity' &&
+                                sortWarnings.popularity)
+                        "
+                        class="mt-3 text-xs leading-5 text-amber-700"
+                    >
+                        Rating and popularity sorting will become available as
+                        reviews and booking-volume signals are introduced.
+                    </p>
                 </div>
 
                 <div v-if="results.data.length" class="grid gap-4">
