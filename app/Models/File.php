@@ -7,6 +7,7 @@ use App\Domain\Files\Enums\FileStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -80,5 +81,13 @@ class File extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    /**
+     * @return HasMany<LocationImage, $this>
+     */
+    public function locationImages(): HasMany
+    {
+        return $this->hasMany(LocationImage::class);
     }
 }

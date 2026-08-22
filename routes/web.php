@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SystemSettingManagementController;
 use App\Http\Controllers\Admin\VendorOperationsController;
 use App\Http\Controllers\Admin\VendorReviewController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
+use App\Http\Controllers\Vendor\VendorLocationController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +54,13 @@ Route::middleware(['auth', 'active-user'])
         Route::post('onboarding/{vendor}/bank-accounts', [VendorOnboardingController::class, 'storeBankAccount'])->name('onboarding.bank-accounts.store');
         Route::post('onboarding/{vendor}/submit', [VendorOnboardingController::class, 'submit'])->name('onboarding.submit');
         Route::post('onboarding/{vendor}/prepare-resubmission', [VendorOnboardingController::class, 'prepareResubmission'])->name('onboarding.resubmission.prepare');
+
+        Route::get('locations', [VendorLocationController::class, 'index'])->name('locations.index');
+        Route::get('locations/create', [VendorLocationController::class, 'create'])->name('locations.create');
+        Route::post('locations', [VendorLocationController::class, 'store'])->name('locations.store');
+        Route::get('locations/{location}/edit', [VendorLocationController::class, 'edit'])->name('locations.edit');
+        Route::put('locations/{location}', [VendorLocationController::class, 'update'])->name('locations.update');
+        Route::post('locations/{location}/status', [VendorLocationController::class, 'updateStatus'])->name('locations.status.update');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

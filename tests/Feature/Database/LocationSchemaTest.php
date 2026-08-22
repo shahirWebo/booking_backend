@@ -24,6 +24,7 @@ test('location tables expose vendor ownership, address, coordinate, timezone, an
         'latitude',
         'longitude',
         'timezone',
+        'status',
     ]))->toBeTrue();
 
     expect(Schema::hasColumns('location_operating_hours', [
@@ -251,6 +252,7 @@ test('location schema provides the documented ownership and geo indexes', functi
 
     expect($indexesFor('locations'))
         ->toContain('locations_vendor_id_index')
+        ->toContain('locations_status_index')
         ->toContain('locations_latitude_longitude_idx');
     expect($indexesFor('location_operating_hours'))
         ->toContain('location_operating_hours_location_id_weekday_index')

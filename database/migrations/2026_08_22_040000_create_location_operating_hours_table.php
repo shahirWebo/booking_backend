@@ -41,8 +41,8 @@ return new class extends Migration
         );
         DB::statement(
             'ALTER TABLE location_operating_hours ADD CONSTRAINT location_operating_hours_time_window_check CHECK (
-                (ends_next_day = 0 AND closes_at_time > opens_at_time)
-                OR (ends_next_day = 1 AND closes_at_time < opens_at_time)
+                (ends_next_day = false AND closes_at_time > opens_at_time)
+                OR (ends_next_day = true AND closes_at_time < opens_at_time)
             )'
         );
     }

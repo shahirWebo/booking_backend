@@ -80,6 +80,16 @@ class Vendor extends Model
     }
 
     /**
+     * The locations operated by this vendor.
+     *
+     * @return HasMany<Location, $this>
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(Location::class);
+    }
+
+    /**
      * The private payout accounts supplied by this vendor.
      *
      * @return HasMany<VendorBankAccount, $this>
