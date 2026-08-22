@@ -46,13 +46,14 @@ final class StoreVendorKycDocumentAction
 
         try {
             $file = DB::transaction(function () use ($vendor, $actor, $documentType, $uploadedFile, $disk, $objectKey, $contents): File {
-                $exists = VendorDocument::query()
+                $document = VendorDocument::query()
                     ->where('vendor_id', $vendor->id)
                     ->where('document_type', $documentType->value)
                     ->where('submission_version', $vendor->submission_version)
-                    ->exists();
+                    ->lockForUpdate()
+                    ->first();
 
-                if ($exists) {
+                if ($document instanceof VendorDocument && $document->status !== 'rejected') {
                     throw ValidationException::withMessages([
                         'document_type' => 'A document of this type is already attached to the current submission.',
                     ]);
@@ -71,13 +72,20 @@ final class StoreVendorKycDocumentAction
                     'uploaded_at' => now(),
                 ]);
 
-                VendorDocument::query()->create([
-                    'vendor_id' => $vendor->id,
-                    'file_id' => $file->id,
-                    'document_type' => $documentType->value,
-                    'submission_version' => $vendor->submission_version,
-                    'status' => 'pending',
-                ]);
+                if ($document instanceof VendorDocument) {
+                    $document->forceFill([
+                        'file_id' => $file->id,
+                        'status' => 'pending',
+                    ])->save();
+                } else {
+                    VendorDocument::query()->create([
+                        'vendor_id' => $vendor->id,
+                        'file_id' => $file->id,
+                        'document_type' => $documentType->value,
+                        'submission_version' => $vendor->submission_version,
+                        'status' => 'pending',
+                    ]);
+                }
 
                 return $file;
             });

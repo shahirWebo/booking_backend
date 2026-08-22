@@ -10,6 +10,7 @@ use App\Domain\Vendors\Actions\SubmitVendorOnboardingAction;
 use App\Domain\Vendors\Actions\UpdateVendorBusinessDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorGstDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorPrimaryContactAction;
+use App\Domain\Vendors\Enums\VendorDocumentType;
 use App\Domain\Vendors\Enums\VendorStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\PrepareRejectedVendorResubmissionRequest;
@@ -55,6 +56,7 @@ final class VendorOnboardingController extends Controller
                 'is_gst_registered' => $vendor->is_gst_registered,
                 'gstin' => $vendor->gstin,
                 'submission_version' => $vendor->submission_version,
+                'can_edit' => in_array($vendor->status, [VendorStatus::Draft, VendorStatus::Rejected], true),
             ],
             'owner' => [
                 'name' => $request->user()->name,
@@ -84,6 +86,12 @@ final class VendorOnboardingController extends Controller
                     'status' => $account->status,
                 ])
                 ->all(),
+            'documentTypes' => collect(VendorDocumentType::cases())
+                ->map(fn (VendorDocumentType $type): array => [
+                    'value' => $type->value,
+                    'label' => str($type->value)->replace('_', ' ')->title()->toString(),
+                ])
+                ->all(),
             'rejection' => $vendor->status === VendorStatus::Rejected
                 ? $vendor->statusHistories()
                     ->where('to_status', VendorStatus::Rejected->value)
@@ -91,6 +99,12 @@ final class VendorOnboardingController extends Controller
                     ->first(['reason_code', 'reason_message', 'transitioned_at'])
                 : null,
             'routes' => [
+                'business_details' => route('vendor.onboarding.business-details.update', $vendor),
+                'primary_contact' => route('vendor.onboarding.primary-contact.update', $vendor),
+                'gst_details' => route('vendor.onboarding.gst-details.update', $vendor),
+                'kyc_documents' => route('vendor.onboarding.kyc-documents.store', $vendor),
+                'bank_accounts' => route('vendor.onboarding.bank-accounts.store', $vendor),
+                'submit' => route('vendor.onboarding.submit', $vendor),
                 'prepare_resubmission' => route('vendor.onboarding.resubmission.prepare', $vendor),
             ],
         ]);
@@ -99,6 +113,10 @@ final class VendorOnboardingController extends Controller
     public function updateBusinessDetails(UpdateVendorBusinessDetailsRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->updateVendorBusinessDetails->execute($vendor, $request->businessDetails());
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Business details submitted .'),
+        ]);
 
         return to_route('vendor.onboarding.show');
     }
@@ -106,14 +124,20 @@ final class VendorOnboardingController extends Controller
     public function updateGstDetails(UpdateVendorGstDetailsRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->updateVendorGstDetails->execute($vendor, $request->gstDetails());
-
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('GST details submitted .'),
+        ]);
         return to_route('vendor.onboarding.show');
     }
 
     public function updatePrimaryContact(UpdateVendorPrimaryContactRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->updateVendorPrimaryContact->execute($vendor, $request->primaryContact());
-
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Primary contact details submitted .'),
+        ]);
         return to_route('vendor.onboarding.show');
     }
 
@@ -125,14 +149,20 @@ final class VendorOnboardingController extends Controller
             $request->documentType(),
             $request->document(),
         );
-
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('KYC document uploaded successfully.'),
+        ]);
         return to_route('vendor.onboarding.show');
     }
 
     public function storeBankAccount(StoreVendorBankAccountRequest $request, Vendor $vendor): RedirectResponse
     {
         $this->storeVendorBankAccount->execute($vendor, $request->bankAccountDetails());
-
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Bank account details submitted .'),
+        ]);
         return to_route('vendor.onboarding.show');
     }
 
