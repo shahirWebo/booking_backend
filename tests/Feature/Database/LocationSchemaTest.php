@@ -253,7 +253,8 @@ test('location schema provides the documented ownership and geo indexes', functi
     expect($indexesFor('locations'))
         ->toContain('locations_vendor_id_index')
         ->toContain('locations_status_index')
-        ->toContain('locations_latitude_longitude_idx');
+        ->toContain('locations_latitude_longitude_idx')
+        ->toContain('locations_status_city_locality_index');
     expect($indexesFor('location_operating_hours'))
         ->toContain('location_operating_hours_location_id_weekday_index')
         ->toContain('location_operating_hours_location_id_weekday_sequence_unique');

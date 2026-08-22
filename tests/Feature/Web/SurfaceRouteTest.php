@@ -8,6 +8,7 @@ it('registers product surface routes with dedicated URI and name prefixes', func
     $routes = [
         'home' => ['GET', '/', 'Welcome'],
         'customer.home' => ['GET', 'customer', 'customer/Home'],
+        'customer.search.index' => ['GET', 'customer/search', null],
         'customer.profile.show' => ['GET', 'customer/profile', null],
         'vendor.home' => ['GET', 'vendor', 'vendor/Home'],
         'vendor.login' => ['GET', 'vendor/login', null],

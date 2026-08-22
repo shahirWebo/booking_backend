@@ -180,5 +180,6 @@ test('pricing schema provides the documented lookup indexes', function (): void 
     expect($indexesFor('pricing_rules'))
         ->toContain('pricing_rules_turf_id_is_active_priority_index')
         ->toContain('pricing_rules_turf_id_rule_type_effective_from_date_index')
-        ->toContain('pricing_rules_turf_id_special_date_index');
+        ->toContain('pricing_rules_turf_id_special_date_index')
+        ->toContain('pricing_rules_turf_id_is_active_price_minor_index');
 });

@@ -236,7 +236,8 @@ test('turf schema provides the documented ownership, filter, and attachment inde
         ->toContain('turfs_status_index')
         ->toContain('turfs_location_id_status_index')
         ->toContain('turfs_surface_type_index')
-        ->toContain('turfs_is_indoor_index');
+        ->toContain('turfs_is_indoor_index')
+        ->toContain('turfs_name_index');
     expect($indexesFor('turf_sports'))
         ->toContain('turf_sports_sport_id_index')
         ->toContain('turf_sports_turf_id_sport_id_unique');
