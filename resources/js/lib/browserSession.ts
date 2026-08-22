@@ -206,6 +206,12 @@ async function restorePersistedBrowserSession(auth: Auth): Promise<void> {
     try {
         const restoredUser = await authApiService.fetchCurrentUser();
 
+        if (!restoredUser) {
+            throw new ApiClientError(502, new Headers(), {
+                message: 'The authenticated user response was empty.',
+            });
+        }
+
         browserSessionState.user = normalizeAuthenticatedApiUser(restoredUser);
         browserSessionState.hasRestored = true;
         browserSessionState.restoreFailed = false;

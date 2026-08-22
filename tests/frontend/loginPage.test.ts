@@ -72,7 +72,7 @@ describe('LoginPage', () => {
                     sessionMode: 'guest',
                 },
             },
-        } as ReturnType<typeof usePage>);
+        } as unknown as ReturnType<typeof usePage>);
         authApiMocks.fetchCurrentUser.mockReset();
         authApiMocks.requestOtp.mockReset();
         authApiMocks.verifyOtp.mockReset();
@@ -164,14 +164,17 @@ describe('LoginPage', () => {
         await wrapper.get('[data-test="verify-otp-button"]').trigger('click');
         await flushPromises();
 
-        expect(authApiMocks.verifyOtp).toHaveBeenCalledWith({
-            otp_request_id: '01K31JY2R4D9V9G4QJVNT8ET9X',
-            code: '123456',
-        }, {
-            headers: {
-                'X-Client-Mode': 'web',
+        expect(authApiMocks.verifyOtp).toHaveBeenCalledWith(
+            {
+                otp_request_id: '01K31JY2R4D9V9G4QJVNT8ET9X',
+                code: '123456',
             },
-        });
+            {
+                headers: {
+                    'X-Client-Mode': 'web',
+                },
+            },
+        );
         expect(
             browserSessionMocks.persistBrowserTokenSession,
         ).toHaveBeenCalledTimes(2);

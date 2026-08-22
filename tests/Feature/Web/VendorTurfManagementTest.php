@@ -336,6 +336,91 @@ test('vendor staff without manager access cannot open the turf workflow', functi
         ->assertForbidden();
 });
 
+test('a vendor manager can manage the complete turf availability workflow', function (): void {
+    [$user, $vendor] = turfVendorManager('vendor_manager');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
+    $source = Turf::query()->create(['location_id' => $location->id, 'name' => 'Source Turf', 'status' => TurfStatus::Active]);
+    $target = Turf::query()->create(['location_id' => $location->id, 'name' => 'Target Turf', 'status' => TurfStatus::Active]);
+
+    $this->actingAs($user)
+        ->put(route('vendor.turfs.availability-schedule.update', $source), [
+            'availability_rules' => [[
+                'weekday' => 1,
+                'is_active' => true,
+                'time_ranges' => [[
+                    'starts_at_time' => '09:00',
+                    'ends_at_time' => '12:00',
+                    'ends_next_day' => false,
+                ]],
+            ]],
+        ])
+        ->assertRedirect(route('vendor.turfs.availability', $source));
+
+    $this->actingAs($user)
+        ->put(route('vendor.turfs.availability-configuration.update', $source), [
+            'default_slot_duration_minutes' => 120,
+            'booking_lead_time_minutes' => 30,
+            'advance_booking_window_days' => 45,
+        ])
+        ->assertRedirect(route('vendor.turfs.availability', $source));
+
+    $this->actingAs($user)->post(route('vendor.turfs.slot-blocks.store', $source), [
+        'block_date' => '2026-09-01',
+        'is_full_day' => true,
+        'starts_at_time' => null,
+        'ends_at_time' => null,
+        'ends_next_day' => false,
+        'reason' => 'Tournament setup',
+    ])->assertRedirect(route('vendor.turfs.availability', $source));
+
+    $this->actingAs($user)->post(route('vendor.turfs.maintenance-blocks.store', $source), [
+        'starts_at_local' => '2026-09-02T09:00',
+        'ends_at_local' => '2026-09-02T11:00',
+        'reason' => 'Replace netting',
+    ])->assertRedirect(route('vendor.turfs.availability', $source));
+
+    $this->actingAs($user)->post(route('vendor.turfs.availability-schedule.copy', $source), [
+        'target_turf_id' => $target->id,
+    ])->assertRedirect(route('vendor.turfs.availability', $source));
+
+    $this->actingAs($user)
+        ->get(route('vendor.turfs.availability', $source))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('vendor/turfs/Availability')
+            ->where('turf.default_slot_duration_minutes', 120)
+            ->has('turf.availability_schedule', 1)
+            ->has('turf.slot_blocks', 1)
+            ->has('turf.maintenance_blocks', 1)
+            ->where('copy_targets.0.id', $target->id));
+
+    expect($target->availabilityRules()->with('timeRanges')->sole()->timeRanges)->toHaveCount(1)
+        ->and($source->maintenanceBlocks()->sole()->starts_at->utc()->format('Y-m-d H:i'))
+        ->toBe('2026-09-02 03:30');
+});
+
+test('availability management rejects invalid partial blocks and cross-vendor schedule copies', function (): void {
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
+    $turf = Turf::query()->create(['location_id' => $location->id, 'name' => 'Managed Turf', 'status' => TurfStatus::Active]);
+    $foreignVendor = Vendor::factory()->create();
+    $foreignLocation = Location::query()->create(turfLocationAttributes($foreignVendor));
+    $foreignTurf = Turf::query()->create(['location_id' => $foreignLocation->id, 'name' => 'Foreign Turf', 'status' => TurfStatus::Active]);
+
+    $this->actingAs($user)->from(route('vendor.turfs.availability', $turf))->post(route('vendor.turfs.slot-blocks.store', $turf), [
+        'block_date' => '2026-09-01',
+        'is_full_day' => false,
+        'starts_at_time' => '12:00',
+        'ends_at_time' => '10:00',
+        'ends_next_day' => false,
+        'reason' => null,
+    ])->assertSessionHasErrors('ends_at_time');
+
+    $this->actingAs($user)->post(route('vendor.turfs.availability-schedule.copy', $turf), [
+        'target_turf_id' => $foreignTurf->id,
+    ])->assertForbidden();
+});
+
 test('a turf image must belong to the same vendor and be ready', function (): void {
     [$user, $vendor] = turfVendorManager('vendor_owner');
     $location = Location::query()->create(turfLocationAttributes($vendor));

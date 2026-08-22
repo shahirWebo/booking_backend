@@ -2,7 +2,10 @@
 
 namespace App\Domain\Availability\Repositories;
 
+use App\Models\MaintenanceBlock;
+use App\Models\SlotBlock;
 use App\Models\Turf;
+use Carbon\CarbonImmutable;
 
 final class AvailabilityRepository
 {
@@ -35,5 +38,36 @@ final class AvailabilityRepository
                 ]);
             }
         }
+    }
+
+    /** @param array<string, int> $attributes */
+    public function updateConfiguration(Turf $turf, array $attributes): void
+    {
+        $turf->update($attributes);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    public function createSlotBlock(Turf $turf, array $attributes): SlotBlock
+    {
+        return $turf->slotBlocks()->create($attributes);
+    }
+
+    public function deleteSlotBlock(SlotBlock $block): void
+    {
+        $block->delete();
+    }
+
+    public function createMaintenanceBlock(Turf $turf, CarbonImmutable $startsAt, CarbonImmutable $endsAt, ?string $reason): MaintenanceBlock
+    {
+        return $turf->maintenanceBlocks()->create([
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'reason' => $reason,
+        ]);
+    }
+
+    public function deleteMaintenanceBlock(MaintenanceBlock $block): void
+    {
+        $block->delete();
     }
 }

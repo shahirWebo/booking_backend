@@ -66,6 +66,7 @@ const props = defineProps<{
         index: string;
         submit: string;
         update_status?: string;
+        availability?: string;
         location_edit: string;
     };
 }>();
@@ -607,24 +608,36 @@ function updateStatus(status: 'active' | 'inactive'): void {
                             }}
                         </p>
                     </div>
-                    <Button
-                        type="button"
-                        :variant="
-                            turf.status === 'active' ? 'outline' : 'default'
-                        "
-                        @click="
-                            updateStatus(
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            v-if="routes.availability"
+                            as-child
+                            type="button"
+                            variant="outline"
+                        >
+                            <Link :href="routes.availability"
+                                >Manage schedule</Link
+                            >
+                        </Button>
+                        <Button
+                            type="button"
+                            :variant="
+                                turf.status === 'active' ? 'outline' : 'default'
+                            "
+                            @click="
+                                updateStatus(
+                                    turf.status === 'active'
+                                        ? 'inactive'
+                                        : 'active',
+                                )
+                            "
+                            >{{
                                 turf.status === 'active'
-                                    ? 'inactive'
-                                    : 'active',
-                            )
-                        "
-                        >{{
-                            turf.status === 'active'
-                                ? 'Deactivate turf'
-                                : 'Activate turf'
-                        }}</Button
-                    >
+                                    ? 'Deactivate turf'
+                                    : 'Activate turf'
+                            }}</Button
+                        >
+                    </div>
                 </div>
             </section>
             <div

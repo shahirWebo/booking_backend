@@ -67,10 +67,17 @@ Route::middleware(['auth', 'active-user'])
         Route::get('locations/{location}/turfs/create', [VendorTurfController::class, 'create'])->name('locations.turfs.create');
         Route::post('locations/{location}/turfs', [VendorTurfController::class, 'store'])->name('locations.turfs.store');
         Route::get('turfs/{turf}/edit', [VendorTurfController::class, 'edit'])->name('turfs.edit');
+        Route::get('turfs/{turf}/availability', [VendorTurfController::class, 'availability'])->name('turfs.availability');
         Route::put('turfs/{turf}', [VendorTurfController::class, 'update'])->name('turfs.update');
         Route::post('turfs/{turf}/status', [VendorTurfController::class, 'updateStatus'])->name('turfs.status.update');
         Route::put('turfs/{turf}/availability-schedule', [VendorTurfController::class, 'updateAvailabilitySchedule'])->name('turfs.availability-schedule.update');
         Route::get('turfs/{turf}/available-slots', [VendorTurfController::class, 'availableSlots'])->name('turfs.available-slots');
+        Route::put('turfs/{turf}/availability-configuration', [VendorTurfController::class, 'updateAvailabilityConfiguration'])->name('turfs.availability-configuration.update');
+        Route::post('turfs/{turf}/slot-blocks', [VendorTurfController::class, 'storeSlotBlock'])->name('turfs.slot-blocks.store');
+        Route::delete('turfs/{turf}/slot-blocks/{slotBlock}', [VendorTurfController::class, 'destroySlotBlock'])->name('turfs.slot-blocks.destroy');
+        Route::post('turfs/{turf}/maintenance-blocks', [VendorTurfController::class, 'storeMaintenanceBlock'])->name('turfs.maintenance-blocks.store');
+        Route::delete('turfs/{turf}/maintenance-blocks/{maintenanceBlock}', [VendorTurfController::class, 'destroyMaintenanceBlock'])->name('turfs.maintenance-blocks.destroy');
+        Route::post('turfs/{turf}/availability-schedule/copy', [VendorTurfController::class, 'copyAvailabilitySchedule'])->name('turfs.availability-schedule.copy');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

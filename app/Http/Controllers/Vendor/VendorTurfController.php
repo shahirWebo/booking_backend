@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Domain\Amenities\Repositories\AmenityRepository;
+use App\Domain\Availability\Actions\ManageTurfAvailabilityAction;
 use App\Domain\Availability\Actions\SyncTurfAvailabilityScheduleAction;
 use App\Domain\Availability\Services\AvailabilityService;
 use App\Domain\Sports\Repositories\SportRepository;
@@ -12,13 +13,19 @@ use App\Domain\Turfs\Actions\UpdateVendorTurfStatusAction;
 use App\Domain\Turfs\Enums\TurfStatus;
 use App\Domain\Turfs\Repositories\TurfRepository;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Vendor\CopyTurfAvailabilityScheduleRequest;
 use App\Http\Requests\Vendor\ShowTurfAvailabilityRequest;
+use App\Http\Requests\Vendor\StoreTurfMaintenanceBlockRequest;
+use App\Http\Requests\Vendor\StoreTurfSlotBlockRequest;
 use App\Http\Requests\Vendor\StoreVendorTurfRequest;
+use App\Http\Requests\Vendor\UpdateTurfAvailabilityConfigurationRequest;
 use App\Http\Requests\Vendor\UpdateTurfAvailabilityScheduleRequest;
 use App\Http\Requests\Vendor\UpdateVendorTurfRequest;
 use App\Http\Requests\Vendor\UpdateVendorTurfStatusRequest;
 use App\Models\File;
 use App\Models\Location;
+use App\Models\MaintenanceBlock;
+use App\Models\SlotBlock;
 use App\Models\Turf;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +45,7 @@ final class VendorTurfController extends Controller
         private readonly UpdateVendorTurfStatusAction $updateVendorTurfStatus,
         private readonly SyncTurfAvailabilityScheduleAction $syncTurfAvailabilitySchedule,
         private readonly AvailabilityService $availability,
+        private readonly ManageTurfAvailabilityAction $manageAvailability,
     ) {}
 
     public function index(Location $location): InertiaResponse
@@ -150,7 +158,59 @@ final class VendorTurfController extends Controller
                 'submit' => route('vendor.turfs.update', $turf),
                 'update_status' => route('vendor.turfs.status.update', $turf),
                 'update_availability_schedule' => route('vendor.turfs.availability-schedule.update', $turf),
+                'availability' => route('vendor.turfs.availability', $turf),
                 'location_edit' => route('vendor.locations.edit', $turf->location),
+            ],
+        ]);
+    }
+
+    public function availability(Turf $turf): InertiaResponse
+    {
+        Gate::authorize('update', $turf);
+        $turf->loadMissing(['location', 'availabilityRules.timeRanges', 'slotBlocks', 'maintenanceBlocks']);
+
+        return Inertia::render('vendor/turfs/Availability', [
+            'turf' => [
+                'id' => $turf->id,
+                'name' => $turf->name,
+                'location_name' => $turf->location->name,
+                'timezone' => $turf->location->timezone,
+                'booking_lead_time_minutes' => $turf->booking_lead_time_minutes,
+                'advance_booking_window_days' => $turf->advance_booking_window_days,
+                'default_slot_duration_minutes' => $turf->default_slot_duration_minutes,
+                'availability_schedule' => $this->serializeAvailabilitySchedule($turf),
+                'slot_blocks' => $turf->slotBlocks->map(fn (SlotBlock $block): array => [
+                    'id' => $block->id,
+                    'block_date' => $block->block_date,
+                    'is_full_day' => $block->is_full_day,
+                    'starts_at_time' => $block->starts_at_time,
+                    'ends_at_time' => $block->ends_at_time,
+                    'reason' => $block->reason,
+                    'delete_url' => route('vendor.turfs.slot-blocks.destroy', [$turf, $block]),
+                ])->values()->all(),
+                'maintenance_blocks' => $turf->maintenanceBlocks->map(fn (MaintenanceBlock $block): array => [
+                    'id' => $block->id,
+                    'starts_at_local' => $block->starts_at->setTimezone($turf->location->timezone)->format('Y-m-d\\TH:i'),
+                    'ends_at_local' => $block->ends_at->setTimezone($turf->location->timezone)->format('Y-m-d\\TH:i'),
+                    'reason' => $block->reason,
+                    'delete_url' => route('vendor.turfs.maintenance-blocks.destroy', [$turf, $block]),
+                ])->values()->all(),
+            ],
+            'copy_targets' => Turf::query()
+                ->whereKeyNot($turf->id)
+                ->whereHas('location', fn ($query) => $query->where('vendor_id', $turf->location->vendor_id))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (Turf $target): array => ['id' => $target->id, 'name' => $target->name])
+                ->all(),
+            'routes' => [
+                'back' => route('vendor.turfs.edit', $turf),
+                'schedule' => route('vendor.turfs.availability-schedule.update', $turf),
+                'configuration' => route('vendor.turfs.availability-configuration.update', $turf),
+                'slots' => route('vendor.turfs.available-slots', $turf),
+                'slot_blocks' => route('vendor.turfs.slot-blocks.store', $turf),
+                'maintenance_blocks' => route('vendor.turfs.maintenance-blocks.store', $turf),
+                'copy_schedule' => route('vendor.turfs.availability-schedule.copy', $turf),
             ],
         ]);
     }
@@ -197,7 +257,7 @@ final class VendorTurfController extends Controller
             'message' => __('Availability schedule updated successfully.'),
         ]);
 
-        return to_route('vendor.turfs.edit', $turf);
+        return to_route('vendor.turfs.availability', $turf);
     }
 
     public function availableSlots(ShowTurfAvailabilityRequest $request, Turf $turf): JsonResponse
@@ -212,6 +272,53 @@ final class VendorTurfController extends Controller
                 $this->availability->slotsForDate($turf, $request->availabilityDate(), CarbonImmutable::now('UTC')),
             ),
         ]);
+    }
+
+    public function updateAvailabilityConfiguration(UpdateTurfAvailabilityConfigurationRequest $request, Turf $turf): RedirectResponse
+    {
+        $this->manageAvailability->updateConfiguration($turf, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Availability settings updated successfully.')]);
+
+        return to_route('vendor.turfs.availability', $turf);
+    }
+
+    public function storeSlotBlock(StoreTurfSlotBlockRequest $request, Turf $turf): RedirectResponse
+    {
+        $this->manageAvailability->createSlotBlock($turf, $request->blockAttributes());
+
+        return to_route('vendor.turfs.availability', $turf);
+    }
+
+    public function destroySlotBlock(Turf $turf, SlotBlock $slotBlock): RedirectResponse
+    {
+        Gate::authorize('update', $turf);
+        $this->manageAvailability->deleteSlotBlock($turf, $slotBlock);
+
+        return to_route('vendor.turfs.availability', $turf);
+    }
+
+    public function storeMaintenanceBlock(StoreTurfMaintenanceBlockRequest $request, Turf $turf): RedirectResponse
+    {
+        $turf->loadMissing('location');
+        $this->manageAvailability->createMaintenanceBlock($turf, $request->startsAt($turf), $request->endsAt($turf), $request->reason());
+
+        return to_route('vendor.turfs.availability', $turf);
+    }
+
+    public function destroyMaintenanceBlock(Turf $turf, MaintenanceBlock $maintenanceBlock): RedirectResponse
+    {
+        Gate::authorize('update', $turf);
+        $this->manageAvailability->deleteMaintenanceBlock($turf, $maintenanceBlock);
+
+        return to_route('vendor.turfs.availability', $turf);
+    }
+
+    public function copyAvailabilitySchedule(CopyTurfAvailabilityScheduleRequest $request, Turf $turf): RedirectResponse
+    {
+        $this->manageAvailability->copySchedule($turf, $request->target());
+
+        return to_route('vendor.turfs.availability', $turf);
     }
 
     /**
