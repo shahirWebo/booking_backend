@@ -58,6 +58,7 @@ const props = defineProps<{
         slot_blocks: string;
         maintenance_blocks: string;
         copy_schedule: string;
+        pricing?: string;
     };
 }>();
 const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -184,6 +185,12 @@ async function loadSlots(): Promise<void> {
                 :href="routes.back"
                 class="inline-flex items-center gap-2 text-sm text-slate-300"
                 ><ArrowLeft class="h-4 w-4" /> Turf details</Link
+            >
+            <Link
+                v-if="routes.pricing"
+                :href="routes.pricing"
+                class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-amber-300"
+                ><Clock3 class="h-4 w-4" /> Manage pricing</Link
             >
             <p
                 class="mt-6 text-xs font-semibold tracking-[.2em] text-emerald-300 uppercase"

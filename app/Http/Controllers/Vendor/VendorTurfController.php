@@ -159,6 +159,7 @@ final class VendorTurfController extends Controller
                 'update_status' => route('vendor.turfs.status.update', $turf),
                 'update_availability_schedule' => route('vendor.turfs.availability-schedule.update', $turf),
                 'availability' => route('vendor.turfs.availability', $turf),
+                'pricing' => route('vendor.turfs.pricing', $turf),
                 'location_edit' => route('vendor.locations.edit', $turf->location),
             ],
         ]);
@@ -205,6 +206,7 @@ final class VendorTurfController extends Controller
                 ->all(),
             'routes' => [
                 'back' => route('vendor.turfs.edit', $turf),
+                'pricing' => route('vendor.turfs.pricing', $turf),
                 'schedule' => route('vendor.turfs.availability-schedule.update', $turf),
                 'configuration' => route('vendor.turfs.availability-configuration.update', $turf),
                 'slots' => route('vendor.turfs.available-slots', $turf),

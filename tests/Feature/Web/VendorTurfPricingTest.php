@@ -8,12 +8,32 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
+
+test('a vendor manager can open the pricing workspace with rule editor and preview routes', function (): void {
+    [$user, $turf] = pricingManagerAndTurf();
+    $rule = $turf->pricingRules()->create(storedVendorPricingRuleAttributes());
+
+    $this->actingAs($user)
+        ->get(route('vendor.turfs.pricing', $turf))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('vendor/turfs/Pricing')
+            ->where('turf.id', $turf->id)
+            ->where('turf.timezone', 'Asia/Kolkata')
+            ->where('pricing_rules.0.id', $rule->id)
+            ->where('pricing_rules.0.price', '100.00')
+            ->where('pricing_rules.0.update_url', route('vendor.turfs.pricing-rules.update', [$turf, $rule]))
+            ->where('routes.quote', route('vendor.turfs.pricing-rules.quote', $turf)),
+        );
+});
 
 test('a vendor manager can create update list and delete a turf pricing rule', function (): void {
     [$user, $turf] = pricingManagerAndTurf();
     $payload = vendorPricingRulePayload();
+    $payload['price'] = '1200';
 
     $this->actingAs($user)
         ->from(route('vendor.turfs.availability', $turf))
@@ -32,14 +52,14 @@ test('a vendor manager can create update list and delete a turf pricing rule', f
         ->from(route('vendor.turfs.availability', $turf))
         ->put(route('vendor.turfs.pricing-rules.update', [$turf, $rule]), [
             ...$payload,
-            'price_minor' => 12500,
+            'price' => '1250',
             'priority' => 5,
         ])
         ->assertRedirect(route('vendor.turfs.availability', $turf));
 
     $this->assertDatabaseHas('pricing_rules', [
         'id' => $rule->id,
-        'price_minor' => 12500,
+        'price_minor' => 125000,
         'priority' => 5,
     ]);
 
@@ -72,10 +92,7 @@ test('pricing rule requests validate their selector and peak-hour window', funct
 test('a vendor cannot change a pricing rule belonging to another turf', function (): void {
     [$user, $turf] = pricingManagerAndTurf();
     [, $otherTurf] = pricingManagerAndTurf();
-    $otherRule = $otherTurf->pricingRules()->create([
-        ...vendorPricingRulePayload(),
-        'currency' => 'INR',
-    ]);
+    $otherRule = $otherTurf->pricingRules()->create(storedVendorPricingRuleAttributes());
 
     $this->actingAs($user)
         ->put(route('vendor.turfs.pricing-rules.update', [$turf, $otherRule]), vendorPricingRulePayload())
@@ -84,10 +101,7 @@ test('a vendor cannot change a pricing rule belonging to another turf', function
 
 test('the browser pricing quote endpoint returns a server calculated multi-slot total', function (): void {
     [$user, $turf] = pricingManagerAndTurf();
-    $turf->pricingRules()->create([
-        ...vendorPricingRulePayload(),
-        'currency' => 'INR',
-    ]);
+    $turf->pricingRules()->create(storedVendorPricingRuleAttributes());
 
     $this->actingAs($user)
         ->postJson(route('vendor.turfs.pricing-rules.quote', $turf), [
@@ -105,10 +119,7 @@ test('the browser pricing quote endpoint returns a server calculated multi-slot 
 
 test('the browser pricing quote endpoint rejects durations outside the turf slot grid', function (): void {
     [$user, $turf] = pricingManagerAndTurf();
-    $turf->pricingRules()->create([
-        ...vendorPricingRulePayload(),
-        'currency' => 'INR',
-    ]);
+    $turf->pricingRules()->create(storedVendorPricingRuleAttributes());
 
     $this->actingAs($user)
         ->postJson(route('vendor.turfs.pricing-rules.quote', $turf), [
@@ -163,7 +174,7 @@ function vendorPricingRulePayload(): array
 {
     return [
         'rule_type' => 'base',
-        'price_minor' => 10000,
+        'price' => '100.00',
         'currency' => 'inr',
         'priority' => 100,
         'effective_from_date' => null,
@@ -174,5 +185,18 @@ function vendorPricingRulePayload(): array
         'ends_at_time' => null,
         'ends_next_day' => false,
         'is_active' => true,
+    ];
+}
+
+/** @return array<string, mixed> */
+function storedVendorPricingRuleAttributes(): array
+{
+    $attributes = vendorPricingRulePayload();
+    unset($attributes['price']);
+
+    return [
+        ...$attributes,
+        'price_minor' => 10000,
+        'currency' => 'INR',
     ];
 }

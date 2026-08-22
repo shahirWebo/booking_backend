@@ -27,7 +27,7 @@ trait InteractsWithPricingRuleInput
     {
         return [
             'rule_type' => ['required', 'string', 'in:'.implode(',', array_column(PricingRuleType::cases(), 'value'))],
-            'price_minor' => ['required', 'integer', 'min:0', 'max:900000000000000'],
+            'price' => ['required', 'string', 'regex:/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/'],
             'currency' => ['required', 'regex:/^[A-Z]{3}$/'],
             'priority' => ['required', 'integer', 'between:1,65535'],
             'effective_from_date' => ['nullable', 'date_format:Y-m-d'],
@@ -53,6 +53,10 @@ trait InteractsWithPricingRuleInput
         $startsAtTime = $this->input('starts_at_time');
         $endsAtTime = $this->input('ends_at_time');
         $endsNextDay = $this->boolean('ends_next_day');
+
+        if ($this->priceMinor() > 900000000000000) {
+            $validator->errors()->add('price', 'The price is too large.');
+        }
 
         if ($this->input('effective_from_date') !== null
             && $this->input('effective_until_date') !== null
@@ -96,7 +100,7 @@ trait InteractsWithPricingRuleInput
     {
         return [
             'rule_type' => $this->validated('rule_type'),
-            'price_minor' => (int) $this->validated('price_minor'),
+            'price_minor' => $this->priceMinor(),
             'currency' => $this->validated('currency'),
             'priority' => (int) $this->validated('priority'),
             'effective_from_date' => $this->validated('effective_from_date'),
@@ -119,5 +123,12 @@ trait InteractsWithPricingRuleInput
         $value = trim((string) $time);
 
         return strlen($value) === 5 ? "$value:00" : $value;
+    }
+
+    private function priceMinor(): int
+    {
+        [$whole, $fraction] = array_pad(explode('.', (string) $this->validated('price'), 2), 2, '');
+
+        return (int) ($whole.str_pad($fraction, 2, '0'));
     }
 }

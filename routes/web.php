@@ -79,6 +79,7 @@ Route::middleware(['auth', 'active-user'])
         Route::post('turfs/{turf}/maintenance-blocks', [VendorTurfController::class, 'storeMaintenanceBlock'])->name('turfs.maintenance-blocks.store');
         Route::delete('turfs/{turf}/maintenance-blocks/{maintenanceBlock}', [VendorTurfController::class, 'destroyMaintenanceBlock'])->name('turfs.maintenance-blocks.destroy');
         Route::post('turfs/{turf}/availability-schedule/copy', [VendorTurfController::class, 'copyAvailabilitySchedule'])->name('turfs.availability-schedule.copy');
+        Route::get('turfs/{turf}/pricing', [VendorTurfPricingController::class, 'show'])->name('turfs.pricing');
         Route::get('turfs/{turf}/pricing-rules', [VendorTurfPricingController::class, 'index'])->name('turfs.pricing-rules.index');
         Route::post('turfs/{turf}/pricing-rules', [VendorTurfPricingController::class, 'store'])->name('turfs.pricing-rules.store');
         Route::put('turfs/{turf}/pricing-rules/{pricingRule}', [VendorTurfPricingController::class, 'update'])->name('turfs.pricing-rules.update');
