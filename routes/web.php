@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SystemSettingManagementController;
 use App\Http\Controllers\Admin\VendorOperationsController;
 use App\Http\Controllers\Admin\VendorReviewController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
+use App\Http\Controllers\Customer\CustomerHomeController;
 use App\Http\Controllers\Customer\CustomerTurfDiscoveryController;
 use App\Http\Controllers\Vendor\VendorLocationController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
@@ -19,7 +20,7 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'Welcome')->name('home');
 
 Route::prefix('customer')->name('customer.')->group(function () {
-    Route::inertia('/', 'customer/Home')->name('home');
+    Route::get('/', CustomerHomeController::class)->name('home');
     Route::get('search', [CustomerTurfDiscoveryController::class, 'index'])->name('search.index');
     Route::get('turfs/{turf}', [CustomerTurfDiscoveryController::class, 'show'])->name('turfs.show');
 });

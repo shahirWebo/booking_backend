@@ -19,6 +19,16 @@ import customer from '@/routes/customer';
 
 type SharedUser = { name: string | null };
 
+type NearbyTurf = {
+    id: number;
+    name: string;
+    distance_meters: number | null;
+    location: { city: string; locality: string | null };
+    pricing_summary: { currency: string | null; starting_price: string | null };
+    detail_url: string;
+};
+
+const props = defineProps<{ nearbyTurfs: NearbyTurf[] }>();
 const page = usePage<{ auth: { user: SharedUser | null } }>();
 const firstName = computed(
     () =>
@@ -180,47 +190,55 @@ const navigation = [
                         >View all</Link
                     >
                 </div>
-                <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div
+                    v-if="props.nearbyTurfs.length"
+                    class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3"
+                >
                     <Link
-                        :href="customer.search.index()"
+                        v-for="(turf, index) in props.nearbyTurfs"
+                        :key="turf.id"
+                        :href="turf.detail_url"
                         class="overflow-hidden rounded-2xl bg-white shadow-[0_14px_28px_-20px_rgba(15,23,42,0.64)] transition hover:-translate-y-0.5"
-                        ><div
-                            class="relative h-24 overflow-hidden bg-[radial-gradient(circle_at_45%_52%,#ef4444_0_16%,#991b1b_17%_22%,transparent_23%),linear-gradient(145deg,#55322b,#c08457_48%,#2e4d2b)]"
-                        >
-                            <span
-                                class="absolute top-2 right-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700"
-                                >4.8</span
-                            >
-                        </div>
+                    >
+                        <div
+                            class="relative h-24 overflow-hidden"
+                            :class="
+                                index % 2 === 0
+                                    ? 'bg-[radial-gradient(circle_at_45%_52%,#ef4444_0_16%,#991b1b_17%_22%,transparent_23%),linear-gradient(145deg,#55322b,#c08457_48%,#2e4d2b)]'
+                                    : 'bg-[linear-gradient(130deg,transparent_0_35%,rgba(255,255,255,0.8)_36%_39%,transparent_40%_100%),linear-gradient(160deg,#154a2a,#6cae50_46%,#174128)]'
+                            "
+                        />
                         <div class="p-3">
                             <p class="truncate text-xs font-semibold">
-                                Rivershore Arena
+                                {{ turf.name }}
                             </p>
                             <p class="mt-1 text-[10px] text-slate-500">
-                                3 km away · from Rs. 500
+                                {{
+                                    turf.distance_meters !== null
+                                        ? `${Math.round(turf.distance_meters / 1000)} km away`
+                                        : [
+                                              turf.location.locality,
+                                              turf.location.city,
+                                          ]
+                                              .filter(Boolean)
+                                              .join(', ')
+                                }}
+                                ·
+                                {{
+                                    turf.pricing_summary.starting_price
+                                        ? `from ${turf.pricing_summary.currency ?? ''} ${turf.pricing_summary.starting_price}`
+                                        : 'Pricing pending'
+                                }}
                             </p>
                         </div></Link
                     >
-                    <Link
-                        :href="customer.search.index()"
-                        class="overflow-hidden rounded-2xl bg-white shadow-[0_14px_28px_-20px_rgba(15,23,42,0.64)] transition hover:-translate-y-0.5"
-                        ><div
-                            class="relative h-24 overflow-hidden bg-[linear-gradient(130deg,transparent_0_35%,rgba(255,255,255,0.8)_36%_39%,transparent_40%_100%),linear-gradient(160deg,#154a2a,#6cae50_46%,#174128)]"
-                        >
-                            <span
-                                class="absolute top-2 right-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700"
-                                >4.6</span
-                            >
-                        </div>
-                        <div class="p-3">
-                            <p class="truncate text-xs font-semibold">
-                                Kick Zone
-                            </p>
-                            <p class="mt-1 text-[10px] text-slate-500">
-                                5 km away · from Rs. 600
-                            </p>
-                        </div></Link
-                    >
+                </div>
+                <div
+                    v-else
+                    class="mt-3 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/60 p-4 text-sm text-slate-600"
+                >
+                    No nearby arenas are available yet. Explore all turfs to
+                    widen your search.
                 </div>
             </section>
         </div>

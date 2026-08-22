@@ -7,7 +7,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 it('registers product surface routes with dedicated URI and name prefixes', function (): void {
     $routes = [
         'home' => ['GET', '/', 'Welcome'],
-        'customer.home' => ['GET', 'customer', 'customer/Home'],
+        'customer.home' => ['GET', 'customer', null],
         'customer.search.index' => ['GET', 'customer/search', null],
         'customer.profile.show' => ['GET', 'customer/profile', null],
         'vendor.home' => ['GET', 'vendor', 'vendor/Home'],
