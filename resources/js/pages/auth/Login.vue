@@ -32,6 +32,8 @@ const props = defineProps<{
     status?: string;
     canResetPassword: boolean;
     intendedUrl?: string | null;
+    surfaceTitle?: string | null;
+    surfaceDescription?: string | null;
 }>();
 
 type AuthStep = 'request' | 'verify';
@@ -51,7 +53,7 @@ const isVerifyingOtp = ref(false);
 const now = ref(Date.now());
 const hasRedirectedAuthenticatedUser = ref(false);
 
-let ticker: ReturnType<typeof window.setInterval> | null = null;
+let ticker: number | null = null;
 const effectiveAuth = computed(() =>
     resolveBrowserSessionAuth(page.props.auth),
 );
@@ -192,6 +194,10 @@ async function requestOtp(options: { resend?: boolean } = {}): Promise<void> {
             mobile: trimmedMobile,
         });
 
+        if (!response) {
+            throw new Error('OTP request did not return a response.');
+        }
+
         mobile.value = trimmedMobile;
         otpRequestId.value = response.otp_request_id;
         expiresAt.value = response.expires_at;
@@ -248,6 +254,10 @@ async function verifyOtp(): Promise<void> {
             },
         });
 
+        if (!verification) {
+            throw new Error('OTP verification did not return a response.');
+        }
+
         persistBrowserTokenSession({
             accessToken: verification.access_token,
             auth: {
@@ -261,6 +271,10 @@ async function verifyOtp(): Promise<void> {
         });
 
         const authenticatedUser = await authApiService.fetchCurrentUser();
+
+        if (!authenticatedUser) {
+            throw new Error('Authenticated user payload is unavailable.');
+        }
 
         persistBrowserTokenSession({
             accessToken: verification.access_token,
@@ -337,7 +351,7 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
                 <h2 class="mt-2 text-2xl font-semibold tracking-[-0.03em]">
                     {{
                         step === 'request'
-                            ? 'Log in with your mobile'
+                            ? props.surfaceTitle ?? 'Log in with your mobile'
                             : 'Verify your code'
                     }}
                 </h2>
@@ -366,10 +380,12 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
         </div>
 
         <div v-if="step === 'request'" class="mt-6">
-            <p class="text-sm leading-6 text-slate-500">
-                Use the same mobile number you book with. We’ll send a one-time
-                password to confirm it’s really you.
-            </p>
+                <p class="text-sm leading-6 text-slate-500">
+                {{
+                    props.surfaceDescription ??
+                    'Use the same mobile number you book with. We’ll send a one-time password to confirm it’s really you.'
+                }}
+                </p>
 
             <div class="mt-6 space-y-5">
                 <div class="space-y-2">
@@ -383,7 +399,7 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
                         placeholder="+91 98765 43210"
                         class="h-12 rounded-2xl border-slate-200 bg-white px-4 text-base shadow-none"
                     />
-                    <InputError :message="requestError" />
+                    <InputError :message="requestError ?? undefined" />
                 </div>
 
                 <Label
@@ -407,8 +423,11 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
             </div>
 
             <p class="mt-6 text-center text-sm leading-6 text-slate-500">
-                New to Spotz? Your customer account can continue from the same
-                mobile number after OTP verification.
+                {{
+                    props.surfaceTitle === 'Vendor access'
+                        ? 'The same verified mobile number will take you back into your vendor onboarding workspace after OTP verification.'
+                        : 'New to Spotz? Your customer account can continue from the same mobile number after OTP verification.'
+                }}
             </p>
         </div>
 
@@ -449,7 +468,7 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
                         {{ formatCountdown(expiryCountdown) }}
                     </span>
                 </p>
-                <InputError :message="verifyError" />
+                <InputError :message="verifyError ?? undefined" />
             </div>
 
             <Button

@@ -64,6 +64,45 @@ test('vendor KYC uploads reject disallowed content before storage', function ():
         ->and(VendorDocument::query()->count())->toBe(0);
 });
 
+test('a vendor owner can replace rejected KYC evidence for the current submission', function (): void {
+    [$user, $vendor] = vendorOwner();
+
+    $failedFile = File::query()->create([
+        'purpose' => FilePurpose::VendorKycDocument,
+        'status' => FileStatus::Failed,
+        'created_by_user_id' => $user->id,
+        'vendor_id' => $vendor->id,
+        'logical_disk' => 'upload_quarantine',
+        'object_key' => 'vendor_kyc_document/failed/source',
+        'size_bytes' => 100,
+        'checksum_sha256' => hash('sha256', 'failed'),
+        'uploaded_at' => now(),
+        'rejection_code' => 'processing_failed',
+    ]);
+    $document = VendorDocument::query()->create([
+        'vendor_id' => $vendor->id,
+        'file_id' => $failedFile->id,
+        'document_type' => 'identity_proof',
+        'submission_version' => 1,
+        'status' => 'rejected',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('vendor.onboarding.kyc-documents.store', $vendor), [
+            'document_type' => 'identity_proof',
+            'document' => UploadedFile::fake()->image('replacement.png', 200, 300),
+        ])
+        ->assertRedirect(route('vendor.onboarding.show'));
+
+    $document->refresh();
+    $replacement = File::query()->whereKeyNot($failedFile->id)->sole();
+
+    expect($document->file_id)->toBe($replacement->id)
+        ->and($document->status)->toBe('active')
+        ->and($replacement->status)->toBe(FileStatus::Ready)
+        ->and($failedFile->fresh()->status)->toBe(FileStatus::Failed);
+});
+
 test('a user cannot upload a KYC document for another vendor', function (): void {
     $user = User::factory()->create(['status' => UserStatus::Active]);
     $vendor = Vendor::factory()->create();

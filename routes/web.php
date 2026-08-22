@@ -36,6 +36,8 @@ Route::prefix('vendor')->name('vendor.')->group(function () {
         'canResetPassword' => Features::enabled(Features::resetPasswords()),
         'status' => $request->session()->get('status'),
         'intendedUrl' => route('vendor.onboarding.show'),
+        'surfaceTitle' => 'Vendor access',
+        'surfaceDescription' => 'Use your mobile OTP to continue vendor onboarding, upload compliance evidence, and track review decisions.',
     ]))->middleware('guest')->name('login');
 });
 
