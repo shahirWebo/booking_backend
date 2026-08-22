@@ -13,7 +13,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\StoreVendorLocationRequest;
 use App\Http\Requests\Vendor\UpdateVendorLocationRequest;
 use App\Http\Requests\Vendor\UpdateVendorLocationStatusRequest;
+use App\Models\File;
 use App\Models\Location;
+use App\Models\Vendor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -63,6 +65,7 @@ final class VendorLocationController extends Controller
             ],
             'location' => null,
             'amenities' => $this->amenityOptions(),
+            'available_images' => $this->availableImageOptions($vendor),
             'routes' => [
                 'index' => route('vendor.locations.index'),
                 'submit' => route('vendor.locations.store'),
@@ -105,6 +108,7 @@ final class VendorLocationController extends Controller
                 $location->loadMissing(['vendor', 'operatingHours', 'amenities', 'images.file'])
             ),
             'amenities' => $this->amenityOptions(),
+            'available_images' => $this->availableImageOptions($location->vendor, $location),
             'routes' => [
                 'index' => route('vendor.locations.index'),
                 'submit' => route('vendor.locations.update', $location),
@@ -158,6 +162,25 @@ final class VendorLocationController extends Controller
                 'code' => $amenity->code,
             ])
             ->values()
+            ->all());
+    }
+
+    /**
+     * @return list<array{id: int, original_name: string|null, canonical_extension: string|null, size_bytes: int|null, status: string|null, attached_to_current_location: bool}>
+     */
+    private function availableImageOptions(Vendor $vendor, ?Location $location = null): array
+    {
+        return array_values($this->locations->availableImageFiles($vendor, $location)
+            ->map(function (File $file): array {
+                return [
+                    'id' => $file->id,
+                    'original_name' => $file->original_name,
+                    'canonical_extension' => $file->canonical_extension,
+                    'size_bytes' => $file->size_bytes,
+                    'status' => $file->status?->value,
+                    'attached_to_current_location' => $file->locationImages->isNotEmpty(),
+                ];
+            })
             ->all());
     }
 

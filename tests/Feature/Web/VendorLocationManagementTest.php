@@ -43,6 +43,54 @@ test('a vendor owner can view the locations index for their managed vendor', fun
         );
 });
 
+test('location create and edit pages expose the selectable gallery image library', function (): void {
+    [$user, $vendor] = vendorManager('vendor_owner');
+    $availableFile = readyLocationImage($vendor, $user, 'gallery/available.jpg');
+    $currentFile = readyLocationImage($vendor, $user, 'gallery/current.jpg');
+    $usedElsewhereFile = readyLocationImage($vendor, $user, 'gallery/other-location.jpg');
+    $otherLocation = Location::query()->create(locationAttributes($vendor, [
+        'name' => 'Other Location',
+    ]));
+    $editableLocation = Location::query()->create(locationAttributes($vendor, [
+        'name' => 'Editable Location',
+    ]));
+
+    $otherLocation->images()->create([
+        'file_id' => $usedElsewhereFile->id,
+        'sort_order' => 1,
+        'caption' => 'Other location image',
+        'alt_text' => 'Other location image alt',
+    ]);
+    $editableLocation->images()->create([
+        'file_id' => $currentFile->id,
+        'sort_order' => 1,
+        'caption' => 'Current image',
+        'alt_text' => 'Current image alt',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('vendor.locations.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('vendor/locations/Form')
+            ->where('mode', 'create')
+            ->has('available_images', 1)
+            ->where('available_images.0.id', $availableFile->id),
+        );
+
+    $this->actingAs($user)
+        ->get(route('vendor.locations.edit', $editableLocation))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('vendor/locations/Form')
+            ->where('mode', 'edit')
+            ->has('available_images', 2)
+            ->where('available_images.0.id', $availableFile->id)
+            ->where('available_images.1.id', $currentFile->id)
+            ->where('available_images.1.attached_to_current_location', true),
+        );
+});
+
 test('a vendor owner can create a location with hours amenities and images', function (): void {
     [$user, $vendor] = vendorManager('vendor_owner');
     $amenities = Amenity::query()->insertGetId([

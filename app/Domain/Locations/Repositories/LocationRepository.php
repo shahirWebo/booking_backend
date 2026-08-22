@@ -2,9 +2,12 @@
 
 namespace App\Domain\Locations\Repositories;
 
+use App\Domain\Files\Enums\FilePurpose;
+use App\Domain\Files\Enums\FileStatus;
 use App\Models\File;
 use App\Models\Location;
 use App\Models\Vendor;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 final class LocationRepository
@@ -18,6 +21,34 @@ final class LocationRepository
             ->where('vendor_id', $vendor->id)
             ->with(['operatingHours', 'amenities', 'images.file'])
             ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, File>
+     */
+    public function availableImageFiles(Vendor $vendor, ?Location $currentLocation = null): Collection
+    {
+        return File::query()
+            ->where('vendor_id', $vendor->id)
+            ->where('purpose', FilePurpose::LocationImage->value)
+            ->where('status', FileStatus::Ready->value)
+            ->where(function (Builder $query) use ($currentLocation): void {
+                $query->whereDoesntHave('locationImages');
+
+                if ($currentLocation instanceof Location) {
+                    $query->orWhereHas('locationImages', function (Builder $locationImages) use ($currentLocation): void {
+                        $locationImages->where('location_id', $currentLocation->id);
+                    });
+                }
+            })
+            ->with(['locationImages' => function ($query) use ($currentLocation): void {
+                if ($currentLocation instanceof Location) {
+                    $query->where('location_id', $currentLocation->id);
+                }
+            }])
+            ->orderByDesc('ready_at')
+            ->orderBy('id')
             ->get();
     }
 
