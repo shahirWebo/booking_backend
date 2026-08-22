@@ -5,6 +5,7 @@ use App\Domain\Files\Enums\FileStatus;
 use App\Domain\Users\Enums\UserStatus;
 use App\Domain\Vendors\Enums\VendorStatus;
 use App\Models\File;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorBankAccount;
@@ -12,6 +13,7 @@ use App\Models\VendorDocument;
 use App\Models\VendorMembership;
 use App\Models\VendorStatusHistory;
 use App\Models\VendorSubmissionSnapshot;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -115,6 +117,87 @@ test('replaying a submission returns the current pending approval state without 
     expect($vendor->fresh()->status)->toBe(VendorStatus::PendingApproval)
         ->and(VendorSubmissionSnapshot::query()->count())->toBe(1)
         ->and(VendorStatusHistory::query()->where('to_status', VendorStatus::PendingApproval->value)->count())->toBe(1);
+});
+
+test('a rejected vendor can submit fresh versioned evidence and receive approval', function (): void {
+    app(DatabaseSeeder::class)->run();
+
+    [$owner, $vendor] = completeVendorDraft();
+    $vendor->update(['status' => VendorStatus::Rejected]);
+    VendorStatusHistory::query()->create([
+        'vendor_id' => $vendor->id,
+        'sequence' => 2,
+        'from_status' => VendorStatus::PendingApproval->value,
+        'to_status' => VendorStatus::Rejected->value,
+        'reason_code' => 'document_verification_required',
+        'reason_message' => 'Upload updated verification documents before resubmitting.',
+        'transitioned_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('vendor.onboarding.resubmission.prepare', $vendor), ['submission_version' => 1])
+        ->assertRedirect(route('vendor.onboarding.show'));
+
+    $this->post(route('vendor.onboarding.bank-accounts.store', $vendor), [
+        'account_holder_name' => 'Acme Sports Private Limited',
+        'bank_name' => 'Replacement Bank',
+        'account_number' => '9876543210123456',
+        'routing_code' => 'EXAM0000123',
+    ])->assertRedirect(route('vendor.onboarding.show'));
+
+    $newDocumentIds = [];
+
+    foreach (['identity_proof', 'business_registration'] as $documentType) {
+        $file = File::query()->create([
+            'purpose' => FilePurpose::VendorKycDocument,
+            'status' => FileStatus::Ready,
+            'created_by_user_id' => $owner->id,
+            'vendor_id' => $vendor->id,
+            'logical_disk' => 'private_files',
+            'object_key' => "vendor_kyc_document/2026/08/resubmission-{$documentType}/source",
+            'detected_mime_type' => 'image/jpeg',
+            'canonical_extension' => 'jpg',
+            'size_bytes' => 1024,
+            'checksum_sha256' => hash('sha256', "resubmission-{$documentType}"),
+            'uploaded_at' => now(),
+            'scanned_at' => now(),
+            'ready_at' => now(),
+        ]);
+        $newDocumentIds[] = VendorDocument::query()->create([
+            'vendor_id' => $vendor->id,
+            'file_id' => $file->id,
+            'document_type' => $documentType,
+            'submission_version' => 2,
+            'status' => 'active',
+        ])->id;
+    }
+
+    $this->post(route('vendor.onboarding.submit', $vendor), ['submission_version' => 2])
+        ->assertRedirect(route('vendor.onboarding.show'));
+
+    $reviewer = User::factory()->create(['status' => UserStatus::Active]);
+    $reviewer->roles()->attach(Role::query()->where('code', 'admin_operations')->firstOrFail());
+
+    $this->actingAs($reviewer)
+        ->post(route('admin.vendor_reviews.approve', $vendor), ['submission_version' => 2])
+        ->assertRedirect(route('admin.vendor_reviews.index'));
+
+    $snapshot = VendorSubmissionSnapshot::query()
+        ->where('vendor_id', $vendor->id)
+        ->where('submission_version', 2)
+        ->sole();
+
+    expect($vendor->fresh()->status)->toBe(VendorStatus::Approved)
+        ->and(array_values($snapshot->snapshot['document_ids']))->toEqualCanonicalizing($newDocumentIds)
+        ->and($snapshot->snapshot['bank_account_id'])->toBe(
+            VendorBankAccount::query()
+                ->where('vendor_id', $vendor->id)
+                ->where('submission_version', 2)
+                ->sole()
+                ->id,
+        )
+        ->and(VendorDocument::query()->where('vendor_id', $vendor->id)->where('submission_version', 1)->count())->toBe(2)
+        ->and(VendorStatusHistory::query()->where('vendor_id', $vendor->id)->where('to_status', VendorStatus::Approved->value)->count())->toBe(1);
 });
 
 /**
