@@ -146,6 +146,35 @@ test('reactivation requires a permission and an active vendor owner', function (
         ->and(VendorStatusHistory::query()->where('vendor_id', $vendor->id)->where('to_status', VendorStatus::Approved->value)->count())->toBe(1);
 });
 
+test('a vendor owner cannot see internal suspension notes in onboarding', function (): void {
+    $owner = User::factory()->create(['status' => UserStatus::Active]);
+    $vendor = lifecycleVendor(VendorStatus::Suspended);
+    VendorMembership::query()->create([
+        'vendor_id' => $vendor->id,
+        'user_id' => $owner->id,
+        'role' => 'vendor_owner',
+        'status' => VendorMembershipStatus::Active,
+    ]);
+    VendorStatusHistory::query()->create([
+        'vendor_id' => $vendor->id,
+        'sequence' => 1,
+        'to_status' => VendorStatus::Suspended->value,
+        'reason_code' => 'suspected_fraud',
+        'reason_message' => 'Internal case 17: retain investigative details for operations only.',
+        'transitioned_at' => now(),
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('vendor.onboarding.show'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('vendor.status', VendorStatus::Suspended->value)
+            ->where('rejection', null)
+            ->missing('statusHistories')
+            ->missing('suspension'),
+        );
+});
+
 function lifecycleAdmin(string $roleCode): User
 {
     $user = User::factory()->create(['status' => UserStatus::Active]);
