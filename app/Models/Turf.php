@@ -113,6 +113,14 @@ class Turf extends Model
     }
 
     /**
+     * @return HasMany<PricingRule, $this>
+     */
+    public function pricingRules(): HasMany
+    {
+        return $this->hasMany(PricingRule::class)->orderBy('priority')->orderBy('id');
+    }
+
+    /**
      * @return HasMany<SlotBlock, $this>
      */
     public function slotBlocks(): HasMany

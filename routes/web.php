@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use App\Http\Controllers\Vendor\VendorLocationController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
 use App\Http\Controllers\Vendor\VendorTurfController;
+use App\Http\Controllers\Vendor\VendorTurfPricingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -78,6 +79,11 @@ Route::middleware(['auth', 'active-user'])
         Route::post('turfs/{turf}/maintenance-blocks', [VendorTurfController::class, 'storeMaintenanceBlock'])->name('turfs.maintenance-blocks.store');
         Route::delete('turfs/{turf}/maintenance-blocks/{maintenanceBlock}', [VendorTurfController::class, 'destroyMaintenanceBlock'])->name('turfs.maintenance-blocks.destroy');
         Route::post('turfs/{turf}/availability-schedule/copy', [VendorTurfController::class, 'copyAvailabilitySchedule'])->name('turfs.availability-schedule.copy');
+        Route::get('turfs/{turf}/pricing-rules', [VendorTurfPricingController::class, 'index'])->name('turfs.pricing-rules.index');
+        Route::post('turfs/{turf}/pricing-rules', [VendorTurfPricingController::class, 'store'])->name('turfs.pricing-rules.store');
+        Route::put('turfs/{turf}/pricing-rules/{pricingRule}', [VendorTurfPricingController::class, 'update'])->name('turfs.pricing-rules.update');
+        Route::delete('turfs/{turf}/pricing-rules/{pricingRule}', [VendorTurfPricingController::class, 'destroy'])->name('turfs.pricing-rules.destroy');
+        Route::post('turfs/{turf}/pricing-rules/quote', [VendorTurfPricingController::class, 'quote'])->name('turfs.pricing-rules.quote');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {
