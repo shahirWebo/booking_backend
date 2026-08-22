@@ -19,8 +19,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 uses(RefreshDatabase::class);
 
 test('a vendor owner can view the turf index for a managed location', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor, [
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor, [
         'name' => 'Indiranagar Arena',
     ]));
     $turf = Turf::query()->create([
@@ -48,8 +48,8 @@ test('a vendor owner can view the turf index for a managed location', function (
 });
 
 test('turf create and edit pages expose selectable turf gallery files', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor, [
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor, [
         'name' => 'Whitefield Sports Hub',
     ]));
     $availableFile = readyTurfImage($vendor, $user, 'turfs/available.jpg');
@@ -103,8 +103,8 @@ test('turf create and edit pages expose selectable turf gallery files', function
 });
 
 test('a vendor owner can create a turf with sports amenities images rules and metadata', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor, [
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor, [
         'name' => 'Koramangala Sports Hub',
     ]));
     $sport = Sport::query()->create([
@@ -170,8 +170,8 @@ test('a vendor owner can create a turf with sports amenities images rules and me
 });
 
 test('a vendor manager can update a turf and replace related records', function (): void {
-    [$user, $vendor] = vendorManager('vendor_manager');
-    $location = Location::query()->create(locationAttributes($vendor));
+    [$user, $vendor] = turfVendorManager('vendor_manager');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
     $turf = Turf::query()->create([
         'location_id' => $location->id,
         'name' => 'Legacy Pitch',
@@ -265,8 +265,8 @@ test('a vendor manager can update a turf and replace related records', function 
 });
 
 test('a vendor owner can activate and deactivate a turf', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor));
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
     $turf = Turf::query()->create([
         'location_id' => $location->id,
         'name' => 'North Court',
@@ -291,8 +291,8 @@ test('a vendor owner can activate and deactivate a turf', function (): void {
 });
 
 test('turf creation requires paired dimensions', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor));
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
 
     $this->actingAs($user)
         ->from(route('vendor.locations.turfs.create', $location))
@@ -311,9 +311,9 @@ test('turf creation requires paired dimensions', function (): void {
 });
 
 test('a vendor cannot update another vendors turf', function (): void {
-    [$user] = vendorManager('vendor_owner');
+    [$user] = turfVendorManager('vendor_owner');
     $otherVendor = Vendor::factory()->create();
-    $location = Location::query()->create(locationAttributes($otherVendor));
+    $location = Location::query()->create(turfLocationAttributes($otherVendor));
     $turf = Turf::query()->create([
         'location_id' => $location->id,
         'name' => 'Foreign Turf',
@@ -328,8 +328,8 @@ test('a vendor cannot update another vendors turf', function (): void {
 });
 
 test('vendor staff without manager access cannot open the turf workflow', function (): void {
-    [$user, $vendor] = vendorManager('vendor_staff');
-    $location = Location::query()->create(locationAttributes($vendor));
+    [$user, $vendor] = turfVendorManager('vendor_staff');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
 
     $this->actingAs($user)
         ->get(route('vendor.locations.turfs.index', $location))
@@ -337,8 +337,8 @@ test('vendor staff without manager access cannot open the turf workflow', functi
 });
 
 test('a turf image must belong to the same vendor and be ready', function (): void {
-    [$user, $vendor] = vendorManager('vendor_owner');
-    $location = Location::query()->create(locationAttributes($vendor));
+    [$user, $vendor] = turfVendorManager('vendor_owner');
+    $location = Location::query()->create(turfLocationAttributes($vendor));
     $otherVendor = Vendor::factory()->create();
     $foreignFile = readyTurfImage($otherVendor, $user);
 
@@ -361,7 +361,7 @@ test('a turf image must belong to the same vendor and be ready', function (): vo
 /**
  * @return array{User, Vendor}
  */
-function vendorManager(string $role): array
+function turfVendorManager(string $role): array
 {
     $user = User::factory()->create([
         'status' => UserStatus::Active,
@@ -382,7 +382,7 @@ function vendorManager(string $role): array
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
-function locationAttributes(Vendor $vendor, array $overrides = []): array
+function turfLocationAttributes(Vendor $vendor, array $overrides = []): array
 {
     return array_merge([
         'vendor_id' => $vendor->id,
