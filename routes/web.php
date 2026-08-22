@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AmenityManagementController;
 use App\Http\Controllers\Admin\SportManagementController;
 use App\Http\Controllers\Admin\SystemSettingManagementController;
+use App\Http\Controllers\Admin\VendorOperationsController;
 use App\Http\Controllers\Admin\VendorReviewController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'active-user'])
         Route::post('onboarding/{vendor}/kyc-documents', [VendorOnboardingController::class, 'uploadKycDocument'])->name('onboarding.kyc-documents.store');
         Route::post('onboarding/{vendor}/bank-accounts', [VendorOnboardingController::class, 'storeBankAccount'])->name('onboarding.bank-accounts.store');
         Route::post('onboarding/{vendor}/submit', [VendorOnboardingController::class, 'submit'])->name('onboarding.submit');
+        Route::post('onboarding/{vendor}/prepare-resubmission', [VendorOnboardingController::class, 'prepareResubmission'])->name('onboarding.resubmission.prepare');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -98,6 +100,29 @@ Route::middleware(['auth', 'active-user', 'permission:review_vendors'])
         Route::get('/', [VendorReviewController::class, 'index'])->name('index');
         Route::get('{vendor}', [VendorReviewController::class, 'show'])->name('show');
         Route::post('{vendor}/approve', [VendorReviewController::class, 'approve'])->name('approve');
+        Route::post('{vendor}/reject', [VendorReviewController::class, 'reject'])->name('reject');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:view_vendors'])
+    ->prefix('admin/operations/vendors')
+    ->name('admin.vendor_operations.')
+    ->group(function (): void {
+        Route::get('lifecycle', [VendorOperationsController::class, 'index'])->name('index');
+        Route::get('lifecycle/{vendor}', [VendorOperationsController::class, 'show'])->name('show');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:suspend_vendors'])
+    ->prefix('admin/operations/vendors')
+    ->name('admin.vendor_operations.')
+    ->group(function (): void {
+        Route::post('lifecycle/{vendor}/suspend', [VendorOperationsController::class, 'suspend'])->name('suspend');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:reactivate_vendors'])
+    ->prefix('admin/operations/vendors')
+    ->name('admin.vendor_operations.')
+    ->group(function (): void {
+        Route::post('lifecycle/{vendor}/reactivate', [VendorOperationsController::class, 'reactivate'])->name('reactivate');
     });
 
 Route::middleware(['auth', 'verified'])->group(function () {

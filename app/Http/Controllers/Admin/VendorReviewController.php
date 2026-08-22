@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Domain\Vendors\Actions\ApproveVendorAction;
+use App\Domain\Vendors\Actions\RejectVendorAction;
 use App\Domain\Vendors\Enums\VendorStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ApproveVendorRequest;
+use App\Http\Requests\Admin\RejectVendorRequest;
 use App\Models\Vendor;
 use App\Models\VendorSubmissionSnapshot;
 use Illuminate\Http\RedirectResponse;
@@ -81,6 +83,7 @@ final class VendorReviewController extends Controller
             'routes' => [
                 'index' => route('admin.vendor_reviews.index'),
                 'approve' => route('admin.vendor_reviews.approve', $vendor),
+                'reject' => route('admin.vendor_reviews.reject', $vendor),
             ],
         ]);
     }
@@ -93,6 +96,24 @@ final class VendorReviewController extends Controller
         $approveVendor->execute($vendor, $request->user(), $request->submissionVersion());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Vendor approved.')]);
+
+        return to_route('admin.vendor_reviews.index');
+    }
+
+    public function reject(
+        RejectVendorRequest $request,
+        Vendor $vendor,
+        RejectVendorAction $rejectVendor,
+    ): RedirectResponse {
+        $rejectVendor->execute(
+            $vendor,
+            $request->user(),
+            $request->submissionVersion(),
+            $request->reasonCode(),
+            $request->reasonMessage(),
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Vendor application rejected.')]);
 
         return to_route('admin.vendor_reviews.index');
     }

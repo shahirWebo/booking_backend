@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Vendor;
 
+use App\Domain\Vendors\Actions\PrepareRejectedVendorResubmissionAction;
 use App\Domain\Vendors\Actions\StartVendorOnboardingAction;
 use App\Domain\Vendors\Actions\StoreVendorBankAccountAction;
 use App\Domain\Vendors\Actions\StoreVendorKycDocumentAction;
@@ -9,7 +10,9 @@ use App\Domain\Vendors\Actions\SubmitVendorOnboardingAction;
 use App\Domain\Vendors\Actions\UpdateVendorBusinessDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorGstDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorPrimaryContactAction;
+use App\Domain\Vendors\Enums\VendorStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Vendor\PrepareRejectedVendorResubmissionRequest;
 use App\Http\Requests\Vendor\StoreVendorBankAccountRequest;
 use App\Http\Requests\Vendor\SubmitVendorOnboardingRequest;
 use App\Http\Requests\Vendor\UpdateVendorBusinessDetailsRequest;
@@ -26,6 +29,7 @@ final class VendorOnboardingController extends Controller
 {
     public function __construct(
         private readonly StartVendorOnboardingAction $startVendorOnboarding,
+        private readonly PrepareRejectedVendorResubmissionAction $prepareRejectedVendorResubmission,
         private readonly StoreVendorBankAccountAction $storeVendorBankAccount,
         private readonly StoreVendorKycDocumentAction $storeVendorKycDocument,
         private readonly SubmitVendorOnboardingAction $submitVendorOnboarding,
@@ -80,6 +84,15 @@ final class VendorOnboardingController extends Controller
                     'status' => $account->status,
                 ])
                 ->all(),
+            'rejection' => $vendor->status === VendorStatus::Rejected
+                ? $vendor->statusHistories()
+                    ->where('to_status', VendorStatus::Rejected->value)
+                    ->orderByDesc('sequence')
+                    ->first(['reason_code', 'reason_message', 'transitioned_at'])
+                : null,
+            'routes' => [
+                'prepare_resubmission' => route('vendor.onboarding.resubmission.prepare', $vendor),
+            ],
         ]);
     }
 
@@ -130,6 +143,21 @@ final class VendorOnboardingController extends Controller
             $request->user(),
             $request->submissionVersion(),
         );
+
+        return to_route('vendor.onboarding.show');
+    }
+
+    public function prepareResubmission(
+        PrepareRejectedVendorResubmissionRequest $request,
+        Vendor $vendor,
+    ): RedirectResponse {
+        $this->prepareRejectedVendorResubmission->execute(
+            $vendor,
+            $request->user(),
+            $request->submissionVersion(),
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Registration reopened for updates.')]);
 
         return to_route('vendor.onboarding.show');
     }
