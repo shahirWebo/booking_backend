@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AmenityManagementController;
 use App\Http\Controllers\Admin\SportManagementController;
 use App\Http\Controllers\Admin\SystemSettingManagementController;
+use App\Http\Controllers\Admin\VendorReviewController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
 use Illuminate\Http\Request;
@@ -88,6 +89,15 @@ Route::middleware(['auth', 'active-user', 'permission:manage_system_settings'])
     ->group(function (): void {
         Route::get('system-settings', [SystemSettingManagementController::class, 'show'])->name('show');
         Route::put('system-settings', [SystemSettingManagementController::class, 'update'])->name('update');
+    });
+
+Route::middleware(['auth', 'active-user', 'permission:review_vendors'])
+    ->prefix('admin/operations/vendors')
+    ->name('admin.vendor_reviews.')
+    ->group(function (): void {
+        Route::get('/', [VendorReviewController::class, 'index'])->name('index');
+        Route::get('{vendor}', [VendorReviewController::class, 'show'])->name('show');
+        Route::post('{vendor}/approve', [VendorReviewController::class, 'approve'])->name('approve');
     });
 
 Route::middleware(['auth', 'verified'])->group(function () {
