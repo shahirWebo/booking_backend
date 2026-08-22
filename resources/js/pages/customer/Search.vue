@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowRight, Compass, MapPin, Search as SearchIcon } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import EmptyState from '@/components/feedback/EmptyState.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,11 @@ import { Label } from '@/components/ui/label';
 type Option = {
     id: number;
     name: string;
+};
+
+type LocationArea = {
+    city: string;
+    locality: string | null;
 };
 
 type ResultItem = {
@@ -61,6 +66,7 @@ const props = defineProps<{
     options: {
         sports: Option[];
         amenities: Option[];
+        location_areas: LocationArea[];
         sorts: Array<{ value: string; label: string }>;
     };
     results: {
@@ -114,6 +120,18 @@ const sortWarnings = computed(() => ({
     popularity: !props.sort_support.popularity,
 }));
 
+const geolocationSupported =
+    typeof navigator !== 'undefined' &&
+    typeof navigator.geolocation?.getCurrentPosition === 'function';
+
+const isRequestingLocation = ref(false);
+const geolocationMessage = ref(
+    geolocationSupported
+        ? 'Use your device location to automatically search nearby turfs.'
+        : 'Browser location is unavailable here, so you can still enter coordinates manually.',
+);
+const geolocationMessageTone = ref<'default' | 'error'>('default');
+
 function toggleSelection(key: 'sport_ids' | 'amenity_ids', id: number): void {
     if (form[key].includes(id)) {
         form[key] = form[key].filter((value) => value !== id);
@@ -129,6 +147,91 @@ function submit(): void {
         preserveScroll: true,
         preserveState: true,
     });
+}
+
+function selectManualArea(event: Event): void {
+    const selectedArea = props.options.location_areas.find(
+        (_, index) =>
+            index.toString() === (event.target as HTMLSelectElement).value,
+    );
+
+    if (!selectedArea) {
+        return;
+    }
+
+    form.city = selectedArea.city;
+    form.locality = selectedArea.locality ?? '';
+    form.latitude = '';
+    form.longitude = '';
+    form.distance_meters = '';
+
+    if (form.sort === 'distance') {
+        form.sort = 'recommended';
+    }
+
+    geolocationMessage.value = 'Area selected. Search when you are ready.';
+    geolocationMessageTone.value = 'default';
+}
+
+function requestCurrentLocation(): void {
+    if (!geolocationSupported || isRequestingLocation.value) {
+        geolocationMessage.value =
+            'Browser location is unavailable here, so you can still enter coordinates manually.';
+        geolocationMessageTone.value = 'error';
+
+        return;
+    }
+
+    isRequestingLocation.value = true;
+    geolocationMessage.value =
+        'Waiting for your browser to share the current location...';
+    geolocationMessageTone.value = 'default';
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            form.latitude = position.coords.latitude.toFixed(6);
+            form.longitude = position.coords.longitude.toFixed(6);
+
+            if (form.sort === 'recommended') {
+                form.sort = 'distance';
+            }
+
+            geolocationMessage.value =
+                'Location added. Refreshing nearby turf results now.';
+            geolocationMessageTone.value = 'default';
+            isRequestingLocation.value = false;
+            submit();
+        },
+        (error) => {
+            geolocationMessageTone.value = 'error';
+
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    geolocationMessage.value =
+                        'Location permission was denied. Enter coordinates manually or allow access and try again.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    geolocationMessage.value =
+                        'Your device could not determine a location just now. Please try again.';
+                    break;
+                case error.TIMEOUT:
+                    geolocationMessage.value =
+                        'Location lookup timed out. Please try again.';
+                    break;
+                default:
+                    geolocationMessage.value =
+                        'We could not read your location. Please try again or enter coordinates manually.';
+                    break;
+            }
+
+            isRequestingLocation.value = false;
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000,
+        },
+    );
 }
 </script>
 
@@ -148,7 +251,9 @@ function submit(): void {
                 class="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
             >
                 <div class="max-w-3xl space-y-2">
-                    <h1 class="text-3xl font-semibold tracking-tight text-slate-950">
+                    <h1
+                        class="text-3xl font-semibold tracking-tight text-slate-950"
+                    >
                         Find a turf that fits today’s game plan
                     </h1>
                     <p class="text-sm leading-6 text-slate-600 sm:text-base">
@@ -185,6 +290,31 @@ function submit(): void {
                 </div>
 
                 <div class="mt-5 grid gap-4">
+                    <div class="grid gap-2">
+                        <Label for="manual-area">Choose an area</Label>
+                        <select
+                            id="manual-area"
+                            class="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                            @change="selectManualArea"
+                        >
+                            <option value="">Choose a listed area</option>
+                            <option
+                                v-for="(area, index) in options.location_areas"
+                                :key="`${area.city}-${area.locality ?? 'city'}`"
+                                :value="index"
+                            >
+                                {{
+                                    [area.locality, area.city]
+                                        .filter(Boolean)
+                                        .join(', ')
+                                }}
+                            </option>
+                        </select>
+                        <p class="text-xs leading-5 text-slate-500">
+                            Choose an area or enter a city and locality below.
+                        </p>
+                    </div>
+
                     <div class="grid gap-2">
                         <Label for="city">City</Label>
                         <Input id="city" v-model="form.city" name="city" />
@@ -224,6 +354,49 @@ function submit(): void {
                                 v-model="form.longitude"
                                 name="longitude"
                             />
+                        </div>
+                    </div>
+
+                    <div
+                        class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3"
+                    >
+                        <div
+                            class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                            <div class="space-y-1">
+                                <p class="text-sm font-medium text-slate-900">
+                                    Nearby search
+                                </p>
+                                <p
+                                    class="text-xs leading-5"
+                                    :class="
+                                        geolocationMessageTone === 'error'
+                                            ? 'text-rose-700'
+                                            : 'text-slate-600'
+                                    "
+                                >
+                                    {{ geolocationMessage }}
+                                </p>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="border-emerald-200 bg-white"
+                                :disabled="
+                                    !geolocationSupported ||
+                                    isRequestingLocation ||
+                                    form.processing
+                                "
+                                @click="requestCurrentLocation"
+                            >
+                                <Compass class="h-4 w-4" />
+                                {{
+                                    isRequestingLocation
+                                        ? 'Locating...'
+                                        : 'Use my location'
+                                }}
+                            </Button>
                         </div>
                     </div>
 
@@ -371,7 +544,9 @@ function submit(): void {
                             >
                                 Search results
                             </p>
-                            <h2 class="mt-1 text-xl font-semibold text-slate-950">
+                            <h2
+                                class="mt-1 text-xl font-semibold text-slate-950"
+                            >
                                 {{ results.meta.total }} turf<span
                                     v-if="results.meta.total !== 1"
                                     >s</span
@@ -382,7 +557,9 @@ function submit(): void {
 
                         <p class="text-sm text-slate-500">
                             Showing
-                            {{ results.meta.from ?? 0 }}-{{ results.meta.to ?? 0 }}
+                            {{ results.meta.from ?? 0 }}-{{
+                                results.meta.to ?? 0
+                            }}
                             of {{ results.meta.total }}
                         </p>
                     </div>
@@ -421,7 +598,9 @@ function submit(): void {
                                 <div
                                     class="flex flex-wrap items-center gap-3 text-sm text-slate-600"
                                 >
-                                    <span class="inline-flex items-center gap-1.5">
+                                    <span
+                                        class="inline-flex items-center gap-1.5"
+                                    >
                                         <MapPin class="h-4 w-4" />
                                         {{
                                             [
@@ -433,7 +612,9 @@ function submit(): void {
                                                 .join(', ')
                                         }}
                                     </span>
-                                    <span v-if="result.distance_meters !== null">
+                                    <span
+                                        v-if="result.distance_meters !== null"
+                                    >
                                         {{ result.distance_meters }} m away
                                     </span>
                                     <span>
@@ -456,7 +637,10 @@ function submit(): void {
                                         {{ sport.name }}
                                     </span>
                                     <span
-                                        v-for="amenity in result.amenities.slice(0, 4)"
+                                        v-for="amenity in result.amenities.slice(
+                                            0,
+                                            4,
+                                        )"
                                         :key="`amenity-${amenity.id}`"
                                         class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700"
                                     >
@@ -516,7 +700,10 @@ function submit(): void {
                                     </p>
                                 </div>
 
-                                <Button as-child class="mt-4 w-full bg-white text-slate-950 hover:bg-slate-100">
+                                <Button
+                                    as-child
+                                    class="mt-4 w-full bg-white text-slate-950 hover:bg-slate-100"
+                                >
                                     <Link :href="result.detail_url">
                                         View details
                                         <ArrowRight class="h-4 w-4" />

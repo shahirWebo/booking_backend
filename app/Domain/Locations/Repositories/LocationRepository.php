@@ -4,6 +4,8 @@ namespace App\Domain\Locations\Repositories;
 
 use App\Domain\Files\Enums\FilePurpose;
 use App\Domain\Files\Enums\FileStatus;
+use App\Domain\Locations\Enums\LocationStatus;
+use App\Domain\Turfs\Enums\TurfStatus;
 use App\Models\File;
 use App\Models\Location;
 use App\Models\Vendor;
@@ -12,6 +14,21 @@ use Illuminate\Database\Eloquent\Collection;
 
 final class LocationRepository
 {
+    /**
+     * @return Collection<int, Location>
+     */
+    public function searchableAreas(): Collection
+    {
+        return Location::query()
+            ->select(['city', 'locality'])
+            ->where('status', LocationStatus::Active->value)
+            ->whereHas('turfs', fn (Builder $query) => $query->where('status', TurfStatus::Active->value))
+            ->distinct()
+            ->orderBy('city')
+            ->orderBy('locality')
+            ->get();
+    }
+
     /**
      * @return Collection<int, Location>
      */

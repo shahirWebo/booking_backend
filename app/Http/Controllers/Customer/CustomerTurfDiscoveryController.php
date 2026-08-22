@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Domain\Amenities\Repositories\AmenityRepository;
+use App\Domain\Locations\Repositories\LocationRepository;
 use App\Domain\Search\Services\TurfDiscoveryService;
 use App\Domain\Sports\Repositories\SportRepository;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,7 @@ final class CustomerTurfDiscoveryController extends Controller
         private readonly TurfDiscoveryService $discovery,
         private readonly SportRepository $sports,
         private readonly AmenityRepository $amenities,
+        private readonly LocationRepository $locations,
     ) {}
 
     public function index(ShowCustomerTurfSearchRequest $request): InertiaResponse
@@ -60,6 +62,12 @@ final class CustomerTurfDiscoveryController extends Controller
                     ->map(fn ($amenity): array => [
                         'id' => $amenity->id,
                         'name' => $amenity->name,
+                    ])
+                    ->all(),
+                'location_areas' => $this->locations->searchableAreas()
+                    ->map(fn ($location): array => [
+                        'city' => $location->city,
+                        'locality' => $location->locality,
                     ])
                     ->all(),
                 'sorts' => [

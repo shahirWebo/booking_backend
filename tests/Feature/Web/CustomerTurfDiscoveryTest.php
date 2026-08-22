@@ -100,7 +100,9 @@ test('customers can search turfs with place sport amenity price distance availab
             ->where('results.data.0.availability_summary.has_availability', true)
             ->where('results.data.0.availability_summary.available_slots_count', 3)
             ->where('results.data.0.sports.0.name', 'Football')
-            ->where('results.data.0.amenities.0.name', 'Parking'),
+            ->where('results.data.0.amenities.0.name', 'Parking')
+            ->where('options.location_areas.0.city', 'Bengaluru')
+            ->where('options.location_areas.0.locality', 'HSR Layout'),
         );
 });
 
