@@ -69,6 +69,8 @@ Route::middleware(['auth', 'active-user'])
         Route::get('turfs/{turf}/edit', [VendorTurfController::class, 'edit'])->name('turfs.edit');
         Route::put('turfs/{turf}', [VendorTurfController::class, 'update'])->name('turfs.update');
         Route::post('turfs/{turf}/status', [VendorTurfController::class, 'updateStatus'])->name('turfs.status.update');
+        Route::put('turfs/{turf}/availability-schedule', [VendorTurfController::class, 'updateAvailabilitySchedule'])->name('turfs.availability-schedule.update');
+        Route::get('turfs/{turf}/available-slots', [VendorTurfController::class, 'availableSlots'])->name('turfs.available-slots');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

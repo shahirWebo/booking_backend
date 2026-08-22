@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Domain\Amenities\Repositories\AmenityRepository;
+use App\Domain\Availability\Actions\SyncTurfAvailabilityScheduleAction;
+use App\Domain\Availability\Services\AvailabilityService;
 use App\Domain\Sports\Repositories\SportRepository;
 use App\Domain\Turfs\Actions\StoreVendorTurfAction;
 use App\Domain\Turfs\Actions\UpdateVendorTurfAction;
@@ -10,12 +12,16 @@ use App\Domain\Turfs\Actions\UpdateVendorTurfStatusAction;
 use App\Domain\Turfs\Enums\TurfStatus;
 use App\Domain\Turfs\Repositories\TurfRepository;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Vendor\ShowTurfAvailabilityRequest;
 use App\Http\Requests\Vendor\StoreVendorTurfRequest;
+use App\Http\Requests\Vendor\UpdateTurfAvailabilityScheduleRequest;
 use App\Http\Requests\Vendor\UpdateVendorTurfRequest;
 use App\Http\Requests\Vendor\UpdateVendorTurfStatusRequest;
 use App\Models\File;
 use App\Models\Location;
 use App\Models\Turf;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -30,6 +36,8 @@ final class VendorTurfController extends Controller
         private readonly StoreVendorTurfAction $storeVendorTurf,
         private readonly UpdateVendorTurfAction $updateVendorTurf,
         private readonly UpdateVendorTurfStatusAction $updateVendorTurfStatus,
+        private readonly SyncTurfAvailabilityScheduleAction $syncTurfAvailabilitySchedule,
+        private readonly AvailabilityService $availability,
     ) {}
 
     public function index(Location $location): InertiaResponse
@@ -132,7 +140,7 @@ final class VendorTurfController extends Controller
                 'status' => $turf->location->status->value,
             ],
             'turf' => $this->serializeTurf(
-                $turf->loadMissing(['sports', 'amenities', 'images.file', 'rules'])
+                $turf->loadMissing(['sports', 'amenities', 'images.file', 'rules', 'availabilityRules.timeRanges'])
             ),
             'sports' => $this->sportOptions(),
             'amenities' => $this->amenityOptions(),
@@ -141,6 +149,7 @@ final class VendorTurfController extends Controller
                 'index' => route('vendor.locations.turfs.index', $turf->location),
                 'submit' => route('vendor.turfs.update', $turf),
                 'update_status' => route('vendor.turfs.status.update', $turf),
+                'update_availability_schedule' => route('vendor.turfs.availability-schedule.update', $turf),
                 'location_edit' => route('vendor.locations.edit', $turf->location),
             ],
         ]);
@@ -177,6 +186,32 @@ final class VendorTurfController extends Controller
         ]);
 
         return to_route('vendor.turfs.edit', $turf);
+    }
+
+    public function updateAvailabilitySchedule(UpdateTurfAvailabilityScheduleRequest $request, Turf $turf): RedirectResponse
+    {
+        $this->syncTurfAvailabilitySchedule->execute($turf, $request->availabilitySchedule());
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('Availability schedule updated successfully.'),
+        ]);
+
+        return to_route('vendor.turfs.edit', $turf);
+    }
+
+    public function availableSlots(ShowTurfAvailabilityRequest $request, Turf $turf): JsonResponse
+    {
+        $turf->loadMissing('location');
+
+        return response()->json([
+            'date' => $request->availabilityDate(),
+            'location_timezone' => $turf->location->timezone,
+            'slots' => array_map(
+                fn ($slot): array => $slot->toArray(),
+                $this->availability->slotsForDate($turf, $request->availabilityDate(), CarbonImmutable::now('UTC')),
+            ),
+        ]);
     }
 
     /**
@@ -261,9 +296,42 @@ final class VendorTurfController extends Controller
                 'sort_order' => $rule->sort_order,
                 'is_active' => $rule->is_active,
             ])->values()->all(),
+            'availability_schedule' => $this->serializeAvailabilitySchedule($turf),
             'routes' => [
                 'edit' => route('vendor.turfs.edit', $turf),
             ],
         ];
+    }
+
+    /**
+     * @return list<array{weekday: int, is_active: bool, time_ranges: list<array{starts_at_time: string, ends_at_time: string, ends_next_day: bool}>}>
+     */
+    private function serializeAvailabilitySchedule(Turf $turf): array
+    {
+        if (! $turf->relationLoaded('availabilityRules')) {
+            return [];
+        }
+
+        $schedule = [];
+
+        foreach ($turf->availabilityRules as $rule) {
+            $ranges = [];
+
+            foreach ($rule->timeRanges as $range) {
+                $ranges[] = [
+                    'starts_at_time' => $range->starts_at_time,
+                    'ends_at_time' => $range->ends_at_time,
+                    'ends_next_day' => $range->ends_next_day,
+                ];
+            }
+
+            $schedule[] = [
+                'weekday' => $rule->weekday,
+                'is_active' => $rule->is_active,
+                'time_ranges' => $ranges,
+            ];
+        }
+
+        return $schedule;
     }
 }
