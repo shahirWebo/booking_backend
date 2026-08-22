@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Domain\Vendors\Actions\StartVendorOnboardingAction;
+use App\Domain\Vendors\Actions\StoreVendorBankAccountAction;
 use App\Domain\Vendors\Actions\StoreVendorKycDocumentAction;
+use App\Domain\Vendors\Actions\SubmitVendorOnboardingAction;
 use App\Domain\Vendors\Actions\UpdateVendorBusinessDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorGstDetailsAction;
 use App\Domain\Vendors\Actions\UpdateVendorPrimaryContactAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Vendor\StoreVendorBankAccountRequest;
+use App\Http\Requests\Vendor\SubmitVendorOnboardingRequest;
 use App\Http\Requests\Vendor\UpdateVendorBusinessDetailsRequest;
 use App\Http\Requests\Vendor\UpdateVendorGstDetailsRequest;
 use App\Http\Requests\Vendor\UpdateVendorPrimaryContactRequest;
@@ -22,7 +26,9 @@ final class VendorOnboardingController extends Controller
 {
     public function __construct(
         private readonly StartVendorOnboardingAction $startVendorOnboarding,
+        private readonly StoreVendorBankAccountAction $storeVendorBankAccount,
         private readonly StoreVendorKycDocumentAction $storeVendorKycDocument,
+        private readonly SubmitVendorOnboardingAction $submitVendorOnboarding,
         private readonly UpdateVendorBusinessDetailsAction $updateVendorBusinessDetails,
         private readonly UpdateVendorGstDetailsAction $updateVendorGstDetails,
         private readonly UpdateVendorPrimaryContactAction $updateVendorPrimaryContact,
@@ -62,6 +68,18 @@ final class VendorOnboardingController extends Controller
                     'file_status' => $document->file?->status?->value,
                 ])
                 ->all(),
+            'bankAccounts' => $vendor->bankAccounts()
+                ->orderBy('id')
+                ->get()
+                ->map(fn ($account): array => [
+                    'id' => $account->id,
+                    'bank_name' => $account->bank_name,
+                    'account_number_last_four' => $account->account_number_last_four,
+                    'country_code' => $account->country_code,
+                    'currency' => $account->currency,
+                    'status' => $account->status,
+                ])
+                ->all(),
         ]);
     }
 
@@ -93,6 +111,24 @@ final class VendorOnboardingController extends Controller
             $request->user(),
             $request->documentType(),
             $request->document(),
+        );
+
+        return to_route('vendor.onboarding.show');
+    }
+
+    public function storeBankAccount(StoreVendorBankAccountRequest $request, Vendor $vendor): RedirectResponse
+    {
+        $this->storeVendorBankAccount->execute($vendor, $request->bankAccountDetails());
+
+        return to_route('vendor.onboarding.show');
+    }
+
+    public function submit(SubmitVendorOnboardingRequest $request, Vendor $vendor): RedirectResponse
+    {
+        $this->submitVendorOnboarding->execute(
+            $vendor,
+            $request->user(),
+            $request->submissionVersion(),
         );
 
         return to_route('vendor.onboarding.show');

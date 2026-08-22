@@ -42,14 +42,12 @@ Route::middleware(['auth', 'active-user'])
     ->name('vendor.')
     ->group(function (): void {
         Route::get('onboarding', [VendorOnboardingController::class, 'show'])->name('onboarding.show');
-        Route::put('onboarding/{vendor}/business-details', [VendorOnboardingController::class, 'updateBusinessDetails'])
-            ->name('onboarding.business-details.update');
-        Route::put('onboarding/{vendor}/primary-contact', [VendorOnboardingController::class, 'updatePrimaryContact'])
-            ->name('onboarding.primary-contact.update');
-        Route::put('onboarding/{vendor}/gst-details', [VendorOnboardingController::class, 'updateGstDetails'])
-            ->name('onboarding.gst-details.update');
-        Route::post('onboarding/{vendor}/kyc-documents', [VendorOnboardingController::class, 'uploadKycDocument'])
-            ->name('onboarding.kyc-documents.store');
+        Route::put('onboarding/{vendor}/business-details', [VendorOnboardingController::class, 'updateBusinessDetails'])->name('onboarding.business-details.update');
+        Route::put('onboarding/{vendor}/primary-contact', [VendorOnboardingController::class, 'updatePrimaryContact'])->name('onboarding.primary-contact.update');
+        Route::put('onboarding/{vendor}/gst-details', [VendorOnboardingController::class, 'updateGstDetails'])->name('onboarding.gst-details.update');
+        Route::post('onboarding/{vendor}/kyc-documents', [VendorOnboardingController::class, 'uploadKycDocument'])->name('onboarding.kyc-documents.store');
+        Route::post('onboarding/{vendor}/bank-accounts', [VendorOnboardingController::class, 'storeBankAccount'])->name('onboarding.bank-accounts.store');
+        Route::post('onboarding/{vendor}/submit', [VendorOnboardingController::class, 'submit'])->name('onboarding.submit');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {
