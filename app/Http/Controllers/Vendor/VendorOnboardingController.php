@@ -128,6 +128,7 @@ final class VendorOnboardingController extends Controller
             'type' => 'success',
             'message' => __('GST details submitted .'),
         ]);
+
         return to_route('vendor.onboarding.show');
     }
 
@@ -138,6 +139,7 @@ final class VendorOnboardingController extends Controller
             'type' => 'success',
             'message' => __('Primary contact details submitted .'),
         ]);
+
         return to_route('vendor.onboarding.show');
     }
 
@@ -153,6 +155,7 @@ final class VendorOnboardingController extends Controller
             'type' => 'success',
             'message' => __('KYC document uploaded successfully.'),
         ]);
+
         return to_route('vendor.onboarding.show');
     }
 
@@ -163,6 +166,7 @@ final class VendorOnboardingController extends Controller
             'type' => 'success',
             'message' => __('Bank account details submitted .'),
         ]);
+
         return to_route('vendor.onboarding.show');
     }
 
