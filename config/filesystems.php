@@ -30,6 +30,20 @@ return [
 
     'disks' => [
 
+        'upload_quarantine' => [
+            'driver' => 'local',
+            'root' => storage_path('app/upload-quarantine'),
+            'throw' => true,
+            'report' => true,
+        ],
+
+        'private_files' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private-files'),
+            'throw' => true,
+            'report' => true,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

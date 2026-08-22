@@ -42,4 +42,11 @@ final class EnvironmentConfiguration
             throw new LogicException("OTP_DELIVERY_PROVIDER=fake is not permitted in the {$environment} environment.");
         }
     }
+
+    public static function assertFileScannerProvider(string $environment, mixed $provider): void
+    {
+        if (in_array($environment, ['production', 'staging'], true) && $provider === 'fake') {
+            throw new LogicException('The fake file scanner cannot be enabled outside local or testing environments.');
+        }
+    }
 }

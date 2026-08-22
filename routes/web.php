@@ -48,6 +48,8 @@ Route::middleware(['auth', 'active-user'])
             ->name('onboarding.primary-contact.update');
         Route::put('onboarding/{vendor}/gst-details', [VendorOnboardingController::class, 'updateGstDetails'])
             ->name('onboarding.gst-details.update');
+        Route::post('onboarding/{vendor}/kyc-documents', [VendorOnboardingController::class, 'uploadKycDocument'])
+            ->name('onboarding.kyc-documents.store');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {

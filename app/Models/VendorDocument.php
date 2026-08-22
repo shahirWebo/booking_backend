@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Vendor $vendor
+ * @property-read File|null $file
  */
 #[Fillable(['vendor_id', 'file_id', 'document_type', 'submission_version', 'status'])]
 class VendorDocument extends Model
@@ -29,5 +30,13 @@ class VendorDocument extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    /**
+     * @return BelongsTo<File, $this>
+     */
+    public function file(): BelongsTo
+    {
+        return $this->belongsTo(File::class);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\File;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorBankAccount;
@@ -15,6 +16,10 @@ test('vendor onboarding tables store versioned private evidence and lifecycle hi
         'legal_name', 'display_name', 'legal_entity_type', 'primary_contact_name',
         'primary_contact_email', 'primary_contact_mobile_number', 'is_gst_registered', 'gstin',
         'submission_version',
+    ]))->toBeTrue();
+    expect(Schema::hasColumns('files', [
+        'purpose', 'status', 'created_by_user_id', 'vendor_id', 'logical_disk', 'object_key',
+        'checksum_sha256', 'uploaded_at', 'scanned_at', 'ready_at', 'rejection_code',
     ]))->toBeTrue();
     expect(Schema::hasColumns('vendor_documents', [
         'vendor_id', 'file_id', 'document_type', 'submission_version', 'status',
@@ -66,6 +71,39 @@ test('vendor onboarding tables store versioned private evidence and lifecycle hi
     expect(DB::table('vendor_documents')->where('vendor_id', $vendor->id)->exists())->toBeTrue();
     expect(DB::table('vendor_bank_accounts')->where('vendor_id', $vendor->id)->exists())->toBeTrue();
     expect(DB::table('vendor_status_histories')->where('vendor_id', $vendor->id)->exists())->toBeTrue();
+});
+
+test('vendor documents require an existing Files record when attached', function (): void {
+    $vendor = Vendor::factory()->create();
+
+    expect(fn () => DB::table('vendor_documents')->insert([
+        'vendor_id' => $vendor->id,
+        'file_id' => 999999,
+        'document_type' => 'identity_proof',
+        'submission_version' => 1,
+        'status' => 'pending',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
+
+    $file = File::query()->create([
+        'purpose' => 'vendor_kyc_document',
+        'status' => 'uploaded',
+        'logical_disk' => 'upload_quarantine',
+        'object_key' => 'vendor_kyc_document/2026/08/test/source',
+    ]);
+
+    DB::table('vendor_documents')->insert([
+        'vendor_id' => $vendor->id,
+        'file_id' => $file->id,
+        'document_type' => 'identity_proof',
+        'submission_version' => 1,
+        'status' => 'pending',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    expect(DB::table('vendor_documents')->where('file_id', $file->id)->exists())->toBeTrue();
 });
 
 test('vendor onboarding evidence and lifecycle sequences are unique within a submission or vendor', function () {

@@ -34,3 +34,14 @@ test('an unsupported OTP delivery provider is rejected', function () {
     expect(fn () => EnvironmentConfiguration::assertOtpDeliveryProvider('local', 'live'))
         ->toThrow(LogicException::class, 'OTP_DELIVERY_PROVIDER must be set to a supported provider.');
 });
+
+test('the fake file scanner is restricted to local and testing', function (string $environment) {
+    EnvironmentConfiguration::assertFileScannerProvider($environment, 'fake');
+
+    expect(true)->toBeTrue();
+})->with(['local', 'testing']);
+
+test('the fake file scanner is rejected in deployed environments', function (string $environment) {
+    expect(fn () => EnvironmentConfiguration::assertFileScannerProvider($environment, 'fake'))
+        ->toThrow(LogicException::class, 'The fake file scanner cannot be enabled outside local or testing environments.');
+})->with(['staging', 'production']);

@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Domain\Auth\Contracts\OtpDeliveryProvider;
 use App\Domain\Auth\Providers\FakeOtpDeliveryProvider;
+use App\Domain\Files\Contracts\FileScanner;
+use App\Domain\Files\Providers\FakeFileScanner;
+use App\Domain\Files\Providers\UnavailableFileScanner;
 use App\Support\EnvironmentConfiguration;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -31,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(OtpDeliveryProvider::class, FakeOtpDeliveryProvider::class);
+        $this->app->singleton(FileScanner::class, function (): FileScanner {
+            return match (config('files.scanner_provider')) {
+                'fake' => new FakeFileScanner,
+                default => new UnavailableFileScanner,
+            };
+        });
     }
 
     /**
@@ -64,6 +73,10 @@ class AppServiceProvider extends ServiceProvider
         EnvironmentConfiguration::assertOtpDeliveryProvider(
             app()->environment(),
             config('otp.delivery_provider'),
+        );
+        EnvironmentConfiguration::assertFileScannerProvider(
+            app()->environment(),
+            config('files.scanner_provider'),
         );
 
         Date::use(CarbonImmutable::class);
