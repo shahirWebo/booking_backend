@@ -139,8 +139,6 @@ const mobileNavItems = computed(() =>
                         Sign out
                     </Button>
                 </div>
-
-                
             </header>
 
             <main class="flex-1">

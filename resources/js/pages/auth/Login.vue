@@ -57,11 +57,12 @@ let ticker: number | null = null;
 const effectiveAuth = computed(() =>
     resolveBrowserSessionAuth(page.props.auth),
 );
-const authenticatedDestination = computed(() =>
-    props.intendedUrl ??
-    (effectiveAuth.value.preferredSurface
-        ? `/${effectiveAuth.value.preferredSurface}`
-        : '/customer'),
+const authenticatedDestination = computed(
+    () =>
+        props.intendedUrl ??
+        (effectiveAuth.value.preferredSurface
+            ? `/${effectiveAuth.value.preferredSurface}`
+            : '/customer'),
 );
 
 const normalizedCode = computed(() =>
@@ -245,14 +246,17 @@ async function verifyOtp(): Promise<void> {
     isVerifyingOtp.value = true;
 
     try {
-        const verification = await authApiService.verifyOtp({
-            otp_request_id: otpRequestId.value,
-            code: normalizedCode.value,
-        }, {
-            headers: {
-                'X-Client-Mode': 'web',
+        const verification = await authApiService.verifyOtp(
+            {
+                otp_request_id: otpRequestId.value,
+                code: normalizedCode.value,
             },
-        });
+            {
+                headers: {
+                    'X-Client-Mode': 'web',
+                },
+            },
+        );
 
         if (!verification) {
             throw new Error('OTP verification did not return a response.');
@@ -351,7 +355,7 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
                 <h2 class="mt-2 text-2xl font-semibold tracking-[-0.03em]">
                     {{
                         step === 'request'
-                            ? props.surfaceTitle ?? 'Log in with your mobile'
+                            ? (props.surfaceTitle ?? 'Log in with your mobile')
                             : 'Verify your code'
                     }}
                 </h2>
@@ -380,12 +384,12 @@ function createCustomerTokenAuth(user: AuthenticatedApiUser): Auth {
         </div>
 
         <div v-if="step === 'request'" class="mt-6">
-                <p class="text-sm leading-6 text-slate-500">
+            <p class="text-sm leading-6 text-slate-500">
                 {{
                     props.surfaceDescription ??
                     'Use the same mobile number you book with. We’ll send a one-time password to confirm it’s really you.'
                 }}
-                </p>
+            </p>
 
             <div class="mt-6 space-y-5">
                 <div class="space-y-2">

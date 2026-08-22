@@ -90,4 +90,12 @@ class File extends Model
     {
         return $this->hasMany(LocationImage::class);
     }
+
+    /**
+     * @return HasMany<TurfImage, $this>
+     */
+    public function turfImages(): HasMany
+    {
+        return $this->hasMany(TurfImage::class);
+    }
 }

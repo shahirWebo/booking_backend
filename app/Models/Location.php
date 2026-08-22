@@ -88,4 +88,12 @@ class Location extends Model
     {
         return $this->hasMany(LocationImage::class)->orderBy('sort_order')->orderBy('id');
     }
+
+    /**
+     * @return HasMany<Turf, $this>
+     */
+    public function turfs(): HasMany
+    {
+        return $this->hasMany(Turf::class)->orderBy('name')->orderBy('id');
+    }
 }

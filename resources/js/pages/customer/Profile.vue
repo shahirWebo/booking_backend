@@ -65,7 +65,8 @@ const profileForm = useForm({
     default_location_label: props.profile.default_location_label ?? '',
     email_notifications_enabled: props.profile.email_notifications_enabled,
     sms_notifications_enabled: props.profile.sms_notifications_enabled,
-    marketing_notifications_enabled: props.profile.marketing_notifications_enabled,
+    marketing_notifications_enabled:
+        props.profile.marketing_notifications_enabled,
 });
 
 const deletionForm = useForm({
@@ -81,7 +82,9 @@ const avatarPreview = computed(() => {
         return null;
     }
 
-    return props.profile.profile_image_url ?? page.props.auth.user?.avatar ?? null;
+    return (
+        props.profile.profile_image_url ?? page.props.auth.user?.avatar ?? null
+    );
 });
 
 const initials = computed(() => {
@@ -121,9 +124,10 @@ function clearSelectedImage(): void {
 
 function toggleSport(sportId: number): void {
     if (profileForm.preferred_sport_ids.includes(sportId)) {
-        profileForm.preferred_sport_ids = profileForm.preferred_sport_ids.filter(
-            (currentSportId) => currentSportId !== sportId,
-        );
+        profileForm.preferred_sport_ids =
+            profileForm.preferred_sport_ids.filter(
+                (currentSportId) => currentSportId !== sportId,
+            );
 
         return;
     }
@@ -140,11 +144,14 @@ function submitProfile(): void {
             ...data,
             preferred_sport_ids: data.preferred_sport_ids,
             remove_profile_image: data.remove_profile_image ? '1' : '0',
-            email_notifications_enabled: data.email_notifications_enabled ? '1' : '0',
-            sms_notifications_enabled: data.sms_notifications_enabled ? '1' : '0',
-            marketing_notifications_enabled: data.marketing_notifications_enabled
+            email_notifications_enabled: data.email_notifications_enabled
                 ? '1'
                 : '0',
+            sms_notifications_enabled: data.sms_notifications_enabled
+                ? '1'
+                : '0',
+            marketing_notifications_enabled:
+                data.marketing_notifications_enabled ? '1' : '0',
         }))
         .put('/customer/profile', {
             preserveScroll: true,
@@ -186,17 +193,27 @@ function submitDeletionRequest(): void {
                     </span>
                 </div>
 
-                <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div
+                    class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+                >
                     <div class="space-y-3">
-                        <p class="text-xs font-semibold tracking-[0.28em] text-slate-500 uppercase">
+                        <p
+                            class="text-xs font-semibold tracking-[0.28em] text-slate-500 uppercase"
+                        >
                             Customer identity
                         </p>
                         <div>
-                            <h1 class="text-3xl font-semibold tracking-tight text-slate-950">
+                            <h1
+                                class="text-3xl font-semibold tracking-tight text-slate-950"
+                            >
                                 Profile and preferences
                             </h1>
-                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                                Keep your booking identity, preferred sports, and alerts in sync before checkout and future booking reminders.
+                            <p
+                                class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base"
+                            >
+                                Keep your booking identity, preferred sports,
+                                and alerts in sync before checkout and future
+                                booking reminders.
                             </p>
                         </div>
                     </div>
@@ -215,9 +232,13 @@ function submitDeletionRequest(): void {
                 </div>
             </div>
 
-            <div class="grid gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1.05fr_0.95fr]">
+            <div
+                class="grid gap-4 px-5 py-5 sm:px-7 lg:grid-cols-[1.05fr_0.95fr]"
+            >
                 <form class="space-y-4" @submit.prevent="submitProfile">
-                    <section class="rounded-[1.75rem] border border-slate-200 bg-slate-50/85 p-4 shadow-sm">
+                    <section
+                        class="rounded-[1.75rem] border border-slate-200 bg-slate-50/85 p-4 shadow-sm"
+                    >
                         <div class="flex items-start gap-4">
                             <div class="relative">
                                 <div
@@ -226,7 +247,10 @@ function submitDeletionRequest(): void {
                                     <img
                                         v-if="avatarPreview"
                                         :src="avatarPreview"
-                                        :alt="profileForm.name || 'Customer profile image'"
+                                        :alt="
+                                            profileForm.name ||
+                                            'Customer profile image'
+                                        "
                                         class="h-full w-full object-cover"
                                     />
                                     <span v-else>{{ initials }}</span>
@@ -246,11 +270,16 @@ function submitDeletionRequest(): void {
 
                             <div class="min-w-0 flex-1 space-y-3">
                                 <div>
-                                    <p class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase">
+                                    <p
+                                        class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase"
+                                    >
                                         Profile image
                                     </p>
-                                    <p class="mt-2 text-sm leading-6 text-slate-600">
-                                        Upload a square photo so your account feels familiar across customer surfaces.
+                                    <p
+                                        class="mt-2 text-sm leading-6 text-slate-600"
+                                    >
+                                        Upload a square photo so your account
+                                        feels familiar across customer surfaces.
                                     </p>
                                 </div>
 
@@ -265,16 +294,22 @@ function submitDeletionRequest(): void {
                                         <X class="h-4 w-4" />
                                         Remove image
                                     </Button>
-                                    <span class="text-xs leading-6 text-slate-500">
+                                    <span
+                                        class="text-xs leading-6 text-slate-500"
+                                    >
                                         JPG, PNG, or WebP up to 3 MB.
                                     </span>
                                 </div>
-                                <InputError :message="profileForm.errors.profile_image" />
+                                <InputError
+                                    :message="profileForm.errors.profile_image"
+                                />
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <section
+                        class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm"
+                    >
                         <div class="mb-4 flex items-center gap-3">
                             <div
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700"
@@ -282,11 +317,14 @@ function submitDeletionRequest(): void {
                                 <CircleUserRound class="h-5 w-5" />
                             </div>
                             <div>
-                                <p class="text-base font-semibold text-slate-950">
+                                <p
+                                    class="text-base font-semibold text-slate-950"
+                                >
                                     Identity details
                                 </p>
                                 <p class="text-sm text-slate-500">
-                                    These details appear during booking and follow-up messages.
+                                    These details appear during booking and
+                                    follow-up messages.
                                 </p>
                             </div>
                         </div>
@@ -300,11 +338,15 @@ function submitDeletionRequest(): void {
                                     name="name"
                                     placeholder="Your full name"
                                 />
-                                <InputError :message="profileForm.errors.name" />
+                                <InputError
+                                    :message="profileForm.errors.name"
+                                />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="customer-email">Email address</Label>
+                                <Label for="customer-email"
+                                    >Email address</Label
+                                >
                                 <Input
                                     id="customer-email"
                                     v-model="profileForm.email"
@@ -312,11 +354,15 @@ function submitDeletionRequest(): void {
                                     name="email"
                                     placeholder="you@example.com"
                                 />
-                                <InputError :message="profileForm.errors.email" />
+                                <InputError
+                                    :message="profileForm.errors.email"
+                                />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="customer-mobile">Mobile number</Label>
+                                <Label for="customer-mobile"
+                                    >Mobile number</Label
+                                >
                                 <Input
                                     id="customer-mobile"
                                     :model-value="profile.mobile_number ?? ''"
@@ -325,13 +371,16 @@ function submitDeletionRequest(): void {
                                     disabled
                                 />
                                 <p class="text-xs leading-5 text-slate-500">
-                                    Mobile number changes still follow the OTP authentication flow.
+                                    Mobile number changes still follow the OTP
+                                    authentication flow.
                                 </p>
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <section
+                        class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm"
+                    >
                         <div class="mb-4 flex items-center gap-3">
                             <div
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700"
@@ -339,11 +388,14 @@ function submitDeletionRequest(): void {
                                 <Trophy class="h-5 w-5" />
                             </div>
                             <div>
-                                <p class="text-base font-semibold text-slate-950">
+                                <p
+                                    class="text-base font-semibold text-slate-950"
+                                >
                                     Preferred sports
                                 </p>
                                 <p class="text-sm text-slate-500">
-                                    Pick up to four sports so future discovery and offers can stay relevant.
+                                    Pick up to four sports so future discovery
+                                    and offers can stay relevant.
                                 </p>
                             </div>
                         </div>
@@ -355,7 +407,9 @@ function submitDeletionRequest(): void {
                                 type="button"
                                 class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium transition"
                                 :class="
-                                    profileForm.preferred_sport_ids.includes(sport.id)
+                                    profileForm.preferred_sport_ids.includes(
+                                        sport.id,
+                                    )
                                         ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
                                         : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                                 "
@@ -364,10 +418,14 @@ function submitDeletionRequest(): void {
                                 {{ sport.name }}
                             </button>
                         </div>
-                        <InputError :message="profileForm.errors.preferred_sport_ids" />
+                        <InputError
+                            :message="profileForm.errors.preferred_sport_ids"
+                        />
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <section
+                        class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm"
+                    >
                         <div class="mb-4 flex items-center gap-3">
                             <div
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700"
@@ -375,28 +433,39 @@ function submitDeletionRequest(): void {
                                 <MapPin class="h-5 w-5" />
                             </div>
                             <div>
-                                <p class="text-base font-semibold text-slate-950">
+                                <p
+                                    class="text-base font-semibold text-slate-950"
+                                >
                                     Default location preference
                                 </p>
                                 <p class="text-sm text-slate-500">
-                                    Save the area you usually book around so discovery can feel faster.
+                                    Save the area you usually book around so
+                                    discovery can feel faster.
                                 </p>
                             </div>
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="default-location-label">Preferred area</Label>
+                            <Label for="default-location-label"
+                                >Preferred area</Label
+                            >
                             <Input
                                 id="default-location-label"
                                 v-model="profileForm.default_location_label"
                                 name="default_location_label"
                                 placeholder="Example: Bandra West"
                             />
-                            <InputError :message="profileForm.errors.default_location_label" />
+                            <InputError
+                                :message="
+                                    profileForm.errors.default_location_label
+                                "
+                            />
                         </div>
                     </section>
 
-                    <section class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+                    <section
+                        class="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm"
+                    >
                         <div class="mb-4 flex items-center gap-3">
                             <div
                                 class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700"
@@ -404,11 +473,14 @@ function submitDeletionRequest(): void {
                                 <BellRing class="h-5 w-5" />
                             </div>
                             <div>
-                                <p class="text-base font-semibold text-slate-950">
+                                <p
+                                    class="text-base font-semibold text-slate-950"
+                                >
                                     Notification preferences
                                 </p>
                                 <p class="text-sm text-slate-500">
-                                    Control booking updates, reminders, and occasional marketing.
+                                    Control booking updates, reminders, and
+                                    occasional marketing.
                                 </p>
                             </div>
                         </div>
@@ -418,14 +490,22 @@ function submitDeletionRequest(): void {
                                 class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                             >
                                 <input
-                                    v-model="profileForm.email_notifications_enabled"
+                                    v-model="
+                                        profileForm.email_notifications_enabled
+                                    "
                                     type="checkbox"
                                     class="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-sky-500"
                                 />
                                 <span>
-                                    <span class="block font-medium text-slate-900">Email booking updates</span>
-                                    <span class="block text-sm leading-6 text-slate-500">
-                                        Receipts, changes, and account notices by email.
+                                    <span
+                                        class="block font-medium text-slate-900"
+                                        >Email booking updates</span
+                                    >
+                                    <span
+                                        class="block text-sm leading-6 text-slate-500"
+                                    >
+                                        Receipts, changes, and account notices
+                                        by email.
                                     </span>
                                 </span>
                             </label>
@@ -434,14 +514,22 @@ function submitDeletionRequest(): void {
                                 class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                             >
                                 <input
-                                    v-model="profileForm.sms_notifications_enabled"
+                                    v-model="
+                                        profileForm.sms_notifications_enabled
+                                    "
                                     type="checkbox"
                                     class="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-sky-500"
                                 />
                                 <span>
-                                    <span class="block font-medium text-slate-900">SMS reminders</span>
-                                    <span class="block text-sm leading-6 text-slate-500">
-                                        Pre-booking reminders and time-sensitive notices on mobile.
+                                    <span
+                                        class="block font-medium text-slate-900"
+                                        >SMS reminders</span
+                                    >
+                                    <span
+                                        class="block text-sm leading-6 text-slate-500"
+                                    >
+                                        Pre-booking reminders and time-sensitive
+                                        notices on mobile.
                                     </span>
                                 </span>
                             </label>
@@ -450,21 +538,31 @@ function submitDeletionRequest(): void {
                                 class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                             >
                                 <input
-                                    v-model="profileForm.marketing_notifications_enabled"
+                                    v-model="
+                                        profileForm.marketing_notifications_enabled
+                                    "
                                     type="checkbox"
                                     class="mt-1 h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-sky-500"
                                 />
                                 <span>
-                                    <span class="block font-medium text-slate-900">Offers and launches</span>
-                                    <span class="block text-sm leading-6 text-slate-500">
-                                        New venues, sports launches, and promotional announcements.
+                                    <span
+                                        class="block font-medium text-slate-900"
+                                        >Offers and launches</span
+                                    >
+                                    <span
+                                        class="block text-sm leading-6 text-slate-500"
+                                    >
+                                        New venues, sports launches, and
+                                        promotional announcements.
                                     </span>
                                 </span>
                             </label>
                         </div>
                     </section>
 
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div
+                        class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
                         <Button
                             type="submit"
                             :disabled="profileForm.processing"
@@ -487,47 +585,77 @@ function submitDeletionRequest(): void {
                 </form>
 
                 <aside class="space-y-4">
-                    <article class="rounded-[1.75rem] bg-slate-950 p-5 text-slate-50 shadow-lg">
-                        <p class="text-xs font-semibold tracking-[0.24em] text-sky-300 uppercase">
+                    <article
+                        class="rounded-[1.75rem] bg-slate-950 p-5 text-slate-50 shadow-lg"
+                    >
+                        <p
+                            class="text-xs font-semibold tracking-[0.24em] text-sky-300 uppercase"
+                        >
                             Account snapshot
                         </p>
                         <dl class="mt-4 space-y-4">
                             <div class="flex items-start gap-3">
                                 <Mail class="mt-0.5 h-4 w-4 text-sky-300" />
                                 <div>
-                                    <dt class="text-xs uppercase text-slate-400">Email</dt>
+                                    <dt
+                                        class="text-xs text-slate-400 uppercase"
+                                    >
+                                        Email
+                                    </dt>
                                     <dd class="mt-1 text-sm text-slate-100">
-                                        {{ profileForm.email || 'Not added yet' }}
+                                        {{
+                                            profileForm.email || 'Not added yet'
+                                        }}
                                     </dd>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <Phone class="mt-0.5 h-4 w-4 text-sky-300" />
                                 <div>
-                                    <dt class="text-xs uppercase text-slate-400">Mobile</dt>
+                                    <dt
+                                        class="text-xs text-slate-400 uppercase"
+                                    >
+                                        Mobile
+                                    </dt>
                                     <dd class="mt-1 text-sm text-slate-100">
-                                        {{ profile.mobile_number || 'Not added yet' }}
+                                        {{
+                                            profile.mobile_number ||
+                                            'Not added yet'
+                                        }}
                                     </dd>
                                 </div>
                             </div>
                             <div class="flex items-start gap-3">
                                 <MapPin class="mt-0.5 h-4 w-4 text-sky-300" />
                                 <div>
-                                    <dt class="text-xs uppercase text-slate-400">Preferred area</dt>
+                                    <dt
+                                        class="text-xs text-slate-400 uppercase"
+                                    >
+                                        Preferred area
+                                    </dt>
                                     <dd class="mt-1 text-sm text-slate-100">
-                                        {{ profileForm.default_location_label || 'Not added yet' }}
+                                        {{
+                                            profileForm.default_location_label ||
+                                            'Not added yet'
+                                        }}
                                     </dd>
                                 </div>
                             </div>
                         </dl>
                     </article>
 
-                    <article class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm">
-                        <p class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase">
+                    <article
+                        class="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm"
+                    >
+                        <p
+                            class="text-xs font-semibold tracking-[0.24em] text-slate-500 uppercase"
+                        >
                             Delete-account settings
                         </p>
                         <p class="mt-3 text-sm leading-6 text-slate-600">
-                            This flow creates a request for follow-up instead of deleting your account immediately, which keeps active booking history safe.
+                            This flow creates a request for follow-up instead of
+                            deleting your account immediately, which keeps
+                            active booking history safe.
                         </p>
 
                         <div
@@ -536,7 +664,8 @@ function submitDeletionRequest(): void {
                         >
                             <p class="font-medium">Request already submitted</p>
                             <p class="mt-1 leading-6">
-                                Submitted on {{ profile.account_deletion_requested_at }}.
+                                Submitted on
+                                {{ profile.account_deletion_requested_at }}.
                             </p>
                         </div>
 
@@ -554,14 +683,18 @@ function submitDeletionRequest(): void {
                                     placeholder="Tell us why you want to remove your customer account."
                                     :disabled="deletionRequested"
                                 />
-                                <InputError :message="deletionForm.errors.reason" />
+                                <InputError
+                                    :message="deletionForm.errors.reason"
+                                />
                             </div>
 
                             <Button
                                 type="submit"
                                 variant="outline"
                                 class="w-full rounded-full border-red-200 text-red-700 hover:bg-red-50"
-                                :disabled="deletionForm.processing || deletionRequested"
+                                :disabled="
+                                    deletionForm.processing || deletionRequested
+                                "
                             >
                                 Request account deletion
                             </Button>

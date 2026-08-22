@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\VendorReviewController;
 use App\Http\Controllers\Api\V1\Customer\CustomerProfileController;
 use App\Http\Controllers\Vendor\VendorLocationController;
 use App\Http\Controllers\Vendor\VendorOnboardingController;
+use App\Http\Controllers\Vendor\VendorTurfController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -61,6 +62,13 @@ Route::middleware(['auth', 'active-user'])
         Route::get('locations/{location}/edit', [VendorLocationController::class, 'edit'])->name('locations.edit');
         Route::put('locations/{location}', [VendorLocationController::class, 'update'])->name('locations.update');
         Route::post('locations/{location}/status', [VendorLocationController::class, 'updateStatus'])->name('locations.status.update');
+
+        Route::get('locations/{location}/turfs', [VendorTurfController::class, 'index'])->name('locations.turfs.index');
+        Route::get('locations/{location}/turfs/create', [VendorTurfController::class, 'create'])->name('locations.turfs.create');
+        Route::post('locations/{location}/turfs', [VendorTurfController::class, 'store'])->name('locations.turfs.store');
+        Route::get('turfs/{turf}/edit', [VendorTurfController::class, 'edit'])->name('turfs.edit');
+        Route::put('turfs/{turf}', [VendorTurfController::class, 'update'])->name('turfs.update');
+        Route::post('turfs/{turf}/status', [VendorTurfController::class, 'updateStatus'])->name('turfs.status.update');
     });
 
 Route::prefix('admin')->name('admin.')->group(function () {
