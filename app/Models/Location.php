@@ -90,6 +90,14 @@ class Location extends Model
     }
 
     /**
+     * @return HasMany<Holiday, $this>
+     */
+    public function holidays(): HasMany
+    {
+        return $this->hasMany(Holiday::class)->orderBy('holiday_date')->orderBy('id');
+    }
+
+    /**
      * @return HasMany<Turf, $this>
      */
     public function turfs(): HasMany

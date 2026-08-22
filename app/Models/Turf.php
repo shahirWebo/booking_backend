@@ -21,6 +21,11 @@ use Illuminate\Support\Carbon;
  * @property int|null $capacity_count
  * @property float|null $length_meters
  * @property float|null $width_meters
+ * @property int $booking_lead_time_minutes
+ * @property int $advance_booking_window_days
+ * @property int $default_slot_duration_minutes
+ * @property int $min_booking_duration_minutes
+ * @property int $max_booking_duration_minutes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Location $location
@@ -35,6 +40,11 @@ use Illuminate\Support\Carbon;
     'capacity_count',
     'length_meters',
     'width_meters',
+    'booking_lead_time_minutes',
+    'advance_booking_window_days',
+    'default_slot_duration_minutes',
+    'min_booking_duration_minutes',
+    'max_booking_duration_minutes',
 ])]
 class Turf extends Model
 {
@@ -46,6 +56,11 @@ class Turf extends Model
             'capacity_count' => 'integer',
             'length_meters' => 'float',
             'width_meters' => 'float',
+            'booking_lead_time_minutes' => 'integer',
+            'advance_booking_window_days' => 'integer',
+            'default_slot_duration_minutes' => 'integer',
+            'min_booking_duration_minutes' => 'integer',
+            'max_booking_duration_minutes' => 'integer',
         ];
     }
 
@@ -87,5 +102,33 @@ class Turf extends Model
     public function rules(): HasMany
     {
         return $this->hasMany(TurfRule::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<AvailabilityRule, $this>
+     */
+    public function availabilityRules(): HasMany
+    {
+        return $this->hasMany(AvailabilityRule::class)->orderBy('weekday')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<SlotBlock, $this>
+     */
+    public function slotBlocks(): HasMany
+    {
+        return $this->hasMany(SlotBlock::class)
+            ->orderBy('block_date')
+            ->orderBy('is_full_day', 'desc')
+            ->orderBy('starts_at_time')
+            ->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<MaintenanceBlock, $this>
+     */
+    public function maintenanceBlocks(): HasMany
+    {
+        return $this->hasMany(MaintenanceBlock::class)->orderBy('starts_at')->orderBy('id');
     }
 }
